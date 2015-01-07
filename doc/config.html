@@ -1,0 +1,177 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module config</title>
+<meta charset="utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>config</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/raid1/home/rj/src/github/config-file-driven-development/config-file-driven-development-master/config.py">/raid1/home/rj/src/github/config-file-driven-development/config-file-driven-development-master/config.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="__builtin__.html">__builtin__</a><br>
+</td><td width="25%" valign=top><a href="re.html">re</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="config.html#Config">Config</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Config">class <strong>Config</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>Read&nbsp;a&nbsp;config&nbsp;file.<br>
+&nbsp;<br>
+The&nbsp;format&nbsp;of&nbsp;the&nbsp;config&nbsp;file&nbsp;will&nbsp;be:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;section1:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;keyword1&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;value1,&nbsp;value2,&nbsp;value3&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;for&nbsp;array<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;keyword2&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;value1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;for&nbsp;scalar<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;keyword3&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;key1=val1,&nbsp;key2=val2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;for&nbsp;hash<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;section2:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;keyword4&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;...<br>
+&nbsp;<br>
+Continuation&nbsp;lines&nbsp;can&nbsp;be&nbsp;done&nbsp;with&nbsp;a&nbsp;backslash&nbsp;at&nbsp;the&nbsp;end&nbsp;of&nbsp;a&nbsp;line.<br>
+It&nbsp;is&nbsp;recursive,&nbsp;using&nbsp;'#include&nbsp;file'&nbsp;to&nbsp;read&nbsp;in&nbsp;other&nbsp;config&nbsp;files.<br>
+&nbsp;<br>
+Use&nbsp;single&nbsp;or&nbsp;double&nbsp;quotes&nbsp;around&nbsp;a&nbsp;value&nbsp;if&nbsp;you&nbsp;need&nbsp;leading&nbsp;or<br>
+trailing&nbsp;whitespace&nbsp;on&nbsp;a&nbsp;value.<br>
+&nbsp;<br>
+A&nbsp;optional&nbsp;definitions&nbsp;file&nbsp;can&nbsp;be&nbsp;given&nbsp;to&nbsp;tell&nbsp;it&nbsp;if&nbsp;the<br>
+type&nbsp;of&nbsp;data&nbsp;above&nbsp;for&nbsp;the&nbsp;keywords&nbsp;is&nbsp;different&nbsp;than&nbsp;the<br>
+default&nbsp;type&nbsp;of&nbsp;'scalar'.&nbsp;&nbsp;&nbsp;The&nbsp;definitions&nbsp;file&nbsp;is&nbsp;of&nbsp;format:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;keyword&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;string<br>
+&nbsp;&nbsp;&nbsp;&nbsp;type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;scalar&nbsp;|&nbsp;array&nbsp;|&nbsp;hash<br>
+&nbsp;&nbsp;&nbsp;&nbsp;allowed-values&nbsp;&nbsp;=&nbsp;value1,&nbsp;value2,&nbsp;...<br>
+&nbsp;&nbsp;&nbsp;&nbsp;separator&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;string&nbsp;(default&nbsp;=&nbsp;,)<br>
+The&nbsp;first&nbsp;line&nbsp;of&nbsp;each&nbsp;entry&nbsp;must&nbsp;be&nbsp;the&nbsp;'keyword'&nbsp;command.<br>
+&nbsp;<br>
+If&nbsp;the&nbsp;definitions&nbsp;file&nbsp;is&nbsp;given,&nbsp;then&nbsp;only&nbsp;keywords&nbsp;specified&nbsp;in&nbsp;the<br>
+definitions&nbsp;file&nbsp;can&nbsp;used&nbsp;in&nbsp;the&nbsp;configuration&nbsp;file.&nbsp;&nbsp;Unless&nbsp;the<br>
+'AcceptUndefinedKeywords'&nbsp;option&nbsp;is&nbsp;used&nbsp;and&nbsp;set&nbsp;to&nbsp;a&nbsp;true&nbsp;value.<br>
+&nbsp;<br>
+Note&nbsp;that&nbsp;a&nbsp;'section'&nbsp;is&nbsp;just&nbsp;a&nbsp;way&nbsp;of&nbsp;grouping&nbsp;and&nbsp;organizing<br>
+keywords.&nbsp;&nbsp;Whatever&nbsp;the&nbsp;type&nbsp;of&nbsp;a&nbsp;keyword&nbsp;(scalar,&nbsp;array&nbsp;or&nbsp;hash),<br>
+it&nbsp;is&nbsp;the&nbsp;same&nbsp;if&nbsp;that&nbsp;keywiord&nbsp;is&nbsp;used&nbsp;in&nbsp;multiple&nbsp;'section's.<br>
+&nbsp;<br>
+To&nbsp;see&nbsp;debug&nbsp;output,&nbsp;set&nbsp;__builtin__.G_debug&nbsp;to&nbsp;true<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;config&nbsp;import&nbsp;<a href="#Config">Config</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp;import&nbsp;sys<br>
+&nbsp;&nbsp;&nbsp;&nbsp;import&nbsp;__builtin__<br>
+&nbsp;&nbsp;&nbsp;&nbsp;__builtin__.G_debug&nbsp;=&nbsp;True&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;#&nbsp;turn&nbsp;on&nbsp;debugging<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;try:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;conf&nbsp;=&nbsp;<a href="#Config">Config</a>(&nbsp;'blah.conf',&nbsp;'blah-defs.conf',&nbsp;AcceptUndefinedKeywords=1)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;except&nbsp;(&nbsp;IOError,&nbsp;SyntaxError,&nbsp;ValueError&nbsp;)&nbsp;as&nbsp;err<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sys.stderr.write(&nbsp;'%s\n'&nbsp;%&nbsp;str(err))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sys.exit(1)<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Config-__init__"><strong>__init__</strong></a>(self, config_file, defs_file<font color="#909090">=''</font>, **options)</dt><dd><tt>Initialization&nbsp;function.<br>
+Not&nbsp;user&nbsp;callable.&nbsp;&nbsp;Ignore&nbsp;this.&nbsp;&nbsp;Go&nbsp;away.</tt></dd></dl>
+
+<dl><dt><a name="Config-get_keywords"><strong>get_keywords</strong></a>(self, section)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;the&nbsp;keywords&nbsp;used&nbsp;in&nbsp;a&nbsp;section&nbsp;in&nbsp;a&nbsp;config&nbsp;file<br>
+&nbsp;<br>
+keywords&nbsp;=&nbsp;conf.<a href="#Config-get_keywords">get_keywords</a>(&nbsp;section&nbsp;)<br>
+&nbsp;<br>
+eg:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;sections&nbsp;=&nbsp;conf.<a href="#Config-get_sections">get_sections</a>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;section&nbsp;in&nbsp;sections:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;keywords&nbsp;=&nbsp;conf.<a href="#Config-get_keywords">get_keywords</a>(&nbsp;section&nbsp;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;keyword&nbsp;in&nbsp;keywords:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...</tt></dd></dl>
+
+<dl><dt><a name="Config-get_sections"><strong>get_sections</strong></a>(self)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;the&nbsp;section&nbsp;names&nbsp;in&nbsp;a&nbsp;config&nbsp;file<br>
+&nbsp;<br>
+sections&nbsp;=&nbsp;conf.<a href="#Config-get_sections">get_sections</a>()</tt></dd></dl>
+
+<dl><dt><a name="Config-get_separator"><strong>get_separator</strong></a>(self, keyword)</dt><dd><tt>Get&nbsp;the&nbsp;separator&nbsp;of&nbsp;values.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;separator&nbsp;=&nbsp;conf.<a href="#Config-get_separator">get_separator</a>(&nbsp;keyword&nbsp;)<br>
+&nbsp;<br>
+The&nbsp;default&nbsp;separator&nbsp;is&nbsp;a&nbsp;comma&nbsp;(,)&nbsp;unless&nbsp;changed&nbsp;in&nbsp;the<br>
+definitions&nbsp;file&nbsp;with&nbsp;a&nbsp;entry&nbsp;like:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;separator&nbsp;=&nbsp;string<br>
+that&nbsp;goes&nbsp;with&nbsp;the&nbsp;keyword&nbsp;previously&nbsp;defined.&nbsp;&nbsp;ie:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;keyword&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;ip-domains<br>
+&nbsp;&nbsp;&nbsp;&nbsp;type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;array<br>
+&nbsp;&nbsp;&nbsp;&nbsp;allowed-values&nbsp;&nbsp;=&nbsp;IPv4,&nbsp;IPv6<br>
+&nbsp;&nbsp;&nbsp;&nbsp;separator&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;,<br>
+&nbsp;<br>
+The&nbsp;separator&nbsp;is&nbsp;not&nbsp;used&nbsp;for&nbsp;the&nbsp;'allowed-values'&nbsp;as&nbsp;seen<br>
+above&nbsp;in&nbsp;the&nbsp;definitions&nbsp;file&nbsp;example,&nbsp;but&nbsp;used&nbsp;as&nbsp;a&nbsp;separator<br>
+in&nbsp;the&nbsp;config&nbsp;file&nbsp;for&nbsp;value&nbsp;types&nbsp;that&nbsp;are&nbsp;'array's&nbsp;and&nbsp;hash's.</tt></dd></dl>
+
+<dl><dt><a name="Config-get_type"><strong>get_type</strong></a>(self, keyword)</dt><dd><tt>Get&nbsp;the&nbsp;type&nbsp;of&nbsp;a&nbsp;keyword.<br>
+&nbsp;<br>
+type&nbsp;=&nbsp;conf.<a href="#Config-get_type">get_type</a>(&nbsp;keyword&nbsp;)<br>
+&nbsp;<br>
+type&nbsp;can&nbsp;be&nbsp;any&nbsp;of&nbsp;'scalar',&nbsp;'array'&nbsp;or&nbsp;'hash'.<br>
+The&nbsp;config&nbsp;format&nbsp;could&nbsp;be&nbsp;any&nbsp;of:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;keyword1&nbsp;=&nbsp;value1&nbsp;&nbsp;&nbsp;(scalar)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;keyword2&nbsp;=&nbsp;value2,&nbsp;value3,&nbsp;value4&nbsp;&nbsp;(array)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;keyword3&nbsp;=&nbsp;key5&nbsp;=&nbsp;value5,&nbsp;key6&nbsp;=&nbsp;value6,&nbsp;key7&nbsp;=&nbsp;value7&nbsp;(hash)</tt></dd></dl>
+
+<dl><dt><a name="Config-get_values"><strong>get_values</strong></a>(self, section, keyword)</dt><dd><tt>Return&nbsp;values&nbsp;of&nbsp;a&nbsp;keyword&nbsp;in&nbsp;a&nbsp;section<br>
+&nbsp;<br>
+values&nbsp;=&nbsp;conf.<a href="#Config-get_values">get_values</a>(&nbsp;section,&nbsp;keyword&nbsp;)<br>
+eg:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;sections&nbsp;=&nbsp;conf.<a href="#Config-get_sections">get_sections</a>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;section&nbsp;in&nbsp;sections:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;section<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;keywords&nbsp;=&nbsp;conf.<a href="#Config-get_keywords">get_keywords</a>(&nbsp;section&nbsp;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;keyword&nbsp;in&nbsp;keywords:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;"\t"&nbsp;+&nbsp;keyword<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;values&nbsp;=&nbsp;conf.<a href="#Config-get_values">get_values</a>(&nbsp;section,&nbsp;keyword&nbsp;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;"\t\t",&nbsp;values<br>
+&nbsp;<br>
+The&nbsp;data-type&nbsp;of&nbsp;the&nbsp;return&nbsp;value&nbsp;depends&nbsp;on&nbsp;the&nbsp;'type'&nbsp;of<br>
+the&nbsp;data.&nbsp;&nbsp;By&nbsp;default&nbsp;it&nbsp;is&nbsp;a&nbsp;scalar,&nbsp;so&nbsp;a&nbsp;string&nbsp;would&nbsp;be&nbsp;<br>
+returned.&nbsp;&nbsp;But&nbsp;the&nbsp;type&nbsp;can&nbsp;be&nbsp;changed&nbsp;via&nbsp;the&nbsp;optional<br>
+definitions&nbsp;file,&nbsp;which&nbsp;can&nbsp;specify&nbsp;either&nbsp;a&nbsp;scalar,&nbsp;array<br>
+or&nbsp;hash&nbsp;for&nbsp;a&nbsp;keyword.&nbsp;&nbsp;The&nbsp;return&nbsp;value&nbsp;of&nbsp;<a href="#Config-get_values">get_values</a>()&nbsp;<br>
+is&nbsp;the&nbsp;appropriate&nbsp;type.<br>
+&nbsp;<br>
+If&nbsp;the&nbsp;type&nbsp;is&nbsp;unknown&nbsp;to&nbsp;the&nbsp;program&nbsp;for&nbsp;a&nbsp;specific&nbsp;keyword,<br>
+it&nbsp;can&nbsp;find&nbsp;out&nbsp;with&nbsp;a&nbsp;call&nbsp;to&nbsp;<a href="#Config-get_type">get_type</a>().</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<hr>
+Data and other attributes defined here:<br>
+<dl><dt><strong>STATE_KEYWORDS</strong> = 2</dl>
+
+<dl><dt><strong>STATE_NONE</strong> = 3</dl>
+
+<dl><dt><strong>STATE_SECTION</strong> = 1</dl>
+
+</td></tr></table></td></tr></table>
+</body></html>
