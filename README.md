@@ -22,83 +22,104 @@ around a value.
 
 A optional definitions file can be provided so that a different separator
 than a comma can be given, restriction to a set of allowed values, and
-provide the type of value (scalar, array, hash).
+provide the type of value there instead of in the main config file.
+These can be specified for a specific keyword within a section, or
+globally to a keyword that may be present in multiple sections.
 
 If a definitions file is provided, then keywords cannot be in the config
 file, unless they are defined in the definitions file.  Unless the option
-'AcceptUndefinedKeywords' is provided and set to 1.
+'AcceptUndefinedKeywords' is provided and set to 'yes'.
+
+If a 'type' is provided in both the config file and the definitions file
+for a section/keyword, then they must match.  One does not over-ride
+the other.
+
+To see documentation, do a pydoc config
+
+### Class methods
+- set_debug()
 
 ### Instance methods
 - get_sections()
 - get_keywords()
-- get_separator()
 - get_type()
 - get_values()
+- get_separator()
 
 ## Config file example
-    # This is a comment, with scalar, array and associative array
+    # This is a comment
     section-name1:
-        keyword1            = value1
-        keyword2            = value2
-        keyword3            = 'this is a really big multi-line \
-                               value with spaces on the end   '
-        keyword4            = val1, val2, 'val 3   ', val4
-        keyword5            = v1 = this, \
-                              v2 = " that ", \
-                              v3 = fooey
+        keyword1 (scalar) = value1
+        keyword2          = value2
+        keyword3          = 'this is a really big multi-line \
+                             value with spaces on the end   '
+        keyword4 (array)  = val1, val2, 'val 3   ', val4
+        keyword5 (hash)   = v1 = this, \
+                            v2 = " that ", \
+                            v3 = fooey
 
     #include some/other/file.conf
 
+    section-name2:
+        keyword4      = This keyword4 is separate from the \
+                        keyword4 in the section section-name1
+        something     = 'This has a comma here \, in the data'
+
+    section-name1:
+        more-stuff    = more stuff for section-name1
+
 ## Definitions file example
-     keyword                = keyword4
+     # This keyword1 will only apply to section section-name1
+     keyword                = section-name1:keyword1
      type                   = array
-     separator              = ,
-     allowed-values         = val1, val2, val3 \
+     separator              = ;
+     allowed-values         = val1, val2, val3, \
                               'val 4   '
 
-     keyword                = keyword5
+     # this keyword2 will apply to all sections
+     keyword                = keyword2
      type                   = hash
      separator              = ,
 
 ## Code example
     #!/usr/bin/env python
-    
-    from config import Config
-    
+
+    import config
     import sys
-    import __builtin__
-    
-    __builtin__.G_debug = False
-    
-    configs = [ 
-        'configs/config1.conf',
-        'configs/config2.conf',
-        'configs/config3.conf'
-    ]
-    num_configs = 0
-    config_obj = []
-    
-    for config in configs:
-        try:
-            conf = Config( config, "configs/test-defs.conf", AcceptUndefinedKeywords=1)
-        except ( IOError, SyntaxError, ValueError ) as err:
-            sys.stderr.write( '%s\n' % str(err))
-            continue
-    
-        config_obj.append( conf )
-        num_configs += 1
-    
-    for num in range( num_configs ):
-        print "config file: " + configs[ num ]
-        conf = config_obj[ num ]
-    
-        sections = conf.get_sections()
-        for section in sections:
-            print "\t" + section
-            keywords = conf.get_keywords( section )
-            for keyword in keywords:
-                print "\t\t" + keyword + ' = ',
+
+    try:
+        conf = config.Config( 'test.conf', 'test-defs.conf', AcceptUndefinedKeywords=1)
+    except ( IOError, SyntaxError, ValueError ) as err:
+        sys.stderr.write( '%s\n' % str(err))
+        sys.exit(1)
+
+    sections = conf.get_sections()
+    for section in sections:
+        print section + ':'
+        keywords = conf.get_keywords( section )
+        for keyword in keywords:
+            print "\t" + keyword + ':'
+
+            try:
+                type = conf.get_type( section, keyword )
+            except ( ValueError ) as err:
+                sys.stderr.write( '%s\n' % str(err))
+                sys.exit(1)
+
+            try:
                 values = conf.get_values( section, keyword )
-                print values
-    
-        print ""
+            except ( ValueError ) as err:
+                sys.stderr.write( '%s\n' % str(err))
+                sys.exit(1)
+
+            if type == 'scalar':
+                print '\t\t\'' + values + "'"
+            elif type == 'array':
+                for v in values:
+                    print "\t\t\'" + v + "\'"
+            elif type == 'hash':
+                keys = list( values )
+                for key in keys:
+                    print '\t\t' + key + ' = ' + "\'" + values[ key ] + "\'"
+            else:
+                print '\t\tunknown type: ' + type

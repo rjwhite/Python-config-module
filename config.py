@@ -1,5 +1,21 @@
-import __builtin__
+# Copyright 2017 RJ White
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# ---------------------------------------------------------------------
+#
+
 import re
+import sys
 
 class Config(object):
     """
@@ -17,9 +33,6 @@ class Config(object):
     Continuation lines can be done with a backslash at the end of a line.
     It is recursive, using '#include file' to read in other config files.
 
-    Use single or double quotes around a value if you need leading or
-    trailing whitespace on a value.
-
     A optional definitions file can be given to tell it if the
     type of data above for the keywords is different than the
     default type of 'scalar'.   The definitions file is of format:
@@ -27,34 +40,74 @@ class Config(object):
         type            = scalar | array | hash
         allowed-values  = value1, value2, ...
         separator       = string (default = ,)
-    The first line of each entry must be the 'keyword' command.
+    Each block of definitions are separated by at least 1 blank line.
+    A blank line signifies the end of a definition block.
+
+    The 'keyword' string value given can be specific to a section, such as:
+        keyword  = some-section:some-keyword
+    If the section name is not given then it applies to the keyword of that
+    name in all sections.  A section specific definition over-rides a generic
+    one.
+
+    The 'separator' given in the definitions file applies to the
+    values the config file, and not the definitions file itself.  
+    ie: the separator used in the definitions file to separate values in
+    'allowed-values' is always a comma.
+
+    If you want the literal separator character in your data, or
+    you change it, be sure to escape your data in the config file
+    appropriately with the backslash character.
 
     If the definitions file is given, then only keywords specified in the
     definitions file can used in the configuration file.  Unless the
     'AcceptUndefinedKeywords' option is used and set to a true value.
 
+    if there is no definitions file to specify different data types, you
+    can specify the type in the config file surrounded by brackets, such as:
+        section1:
+            keyword1 (array)  = value1, value2, value3    # for array
+            keyword2 (scalar) = value1                    # for scalar
+            keyword3 (hash)   = key1=val1, key2=val2      # for hash
+
     Note that a 'section' is just a way of grouping and organizing
     keywords.  Whatever the type of a keyword (scalar, array or hash),
-    it is the same if that keywiord is used in multiple 'section's.
+    it is the same if that keyword is used in multiple 'section's.
 
-    To see debug output, set __builtin__.G_debug to true
+    Use single or double quotes around a value if you need leading or
+    trailing whitespace on a value.
 
-        from config import Config
-        import sys
-        import __builtin__
-        __builtin__.G_debug = True      # turn on debugging
-
-        try:
-            conf = Config( 'blah.conf', 'blah-defs.conf', AcceptUndefinedKeywords=1)
-        except ( IOError, SyntaxError, ValueError ) as err
-            sys.stderr.write( '%s\\n' % str(err))
-            sys.exit(1)
+    To see debug output:  config.Config.set_debug( True )
     """
 
-    # states
-    STATE_SECTION       = 1
-    STATE_KEYWORDS      = 2
-    STATE_NONE          = 3
+    # states while processing a section
+    _STATE_SECTION      = 1
+    _STATE_KEYWORDS     = 2
+    _STATE_NONE         = 3
+
+    # keywords used in processing definitions file
+    _DEFS_KEYWORD       = 'keyword'
+    _DEFS_TYPE          = 'type'
+    _DEFS_SEPARATOR     = 'separator'
+    _DEFS_ALLOWED       = 'allowed-values'
+    _DEFS_SECTION       = 'section'
+
+    # types of data
+    _TYPE_SCALAR        = 'scalar'
+    _TYPE_ARRAY         = 'array'
+    _TYPE_HASH          = 'hash'
+    _ALLOWED_TYPES      = ( _TYPE_SCALAR, _TYPE_ARRAY, _TYPE_HASH )
+
+    _DEFAULT_TYPE       = _TYPE_SCALAR
+    _DEFAULT_SEPARATOR  = ','
+
+    # to deal with escape characters and value separators that are
+    # wanted as part of the data
+    _HIDE_SEPARATOR     = 'EvIlCoMmA'
+    _HIDE_BACKSLASH     = 'EvIlBaCkSlAsH'
+
+    _VERSION            = '2.0'
+
+    _DEBUG              = 0     # use set_debug() to set
 
     def __init__( self, config_file, defs_file="", **options ):
         """
@@ -62,43 +115,35 @@ class Config(object):
         Not user callable.  Ignore this.  Go away.
         """
 
-        self.config_file    	= config_file
-        self.defs_file      	= defs_file
+        self.config_file        = config_file
+        self.defs_file          = defs_file
 
-        i_am                    = __name__ + ":init()"
+        i_am                    = sys._getframe().f_code.co_name
         self.accept_all_keys    = options.pop( 'AcceptUndefinedKeywords', False )
-        self.values         	= {}
+        self.values             = {}
+        self.generic_types      = {}    # get_type( keyword )
+        self.specific_types     = {}    # get_type( section, keyword )
 
         # we have a pile of state to keep in our instance to make handling
         # recursive calls to __read_file() easier
 
-        self.state          	= Config.STATE_NONE
+        self.state              = Config._STATE_NONE
         self.recursion_depth    = 0
-        self.errors         	= []
+        self.errors             = []
         self.num_errs           = 0
-        self.error_msg      	= ""
+        self.error_msg          = ""
 
         # for the definitions file
-        self.have_defs_file 	= 0         # set to 1 if exists and processed
-        self.defs_type          = {}        # 'type'
-        self.defs_ok_values     = {}        # 'allowed-values'
-        self.defs_separator     = {}        # 'separator'
-        self.defs_keywords      = {}        # 'keyword'
+        self.have_defs_file     = 0         # set to 1 if exists and processed
+        self.defs               = {}        # definitions
         self.defs_ok_keywords   = {}        # keywords defined in defs file
 
-        self.section_name   	= ""        # current section being processed
+        self.section_name       = ""        # current section being processed
         self.sections           = {}
         self.sections_ordered   = []
 
-        # if user has not set G_debug, set it to false
-        try:
-            __builtin__.G_debug
-        except (NameError, AttributeError) as e:
-            __builtin__.G_debug = False
-
-        if __builtin__.G_debug:
-            print i_am + ': processing config file ' + config_file
-            print i_am + ': processing definitions file ' + defs_file
+        Config.__debug( self, __name__, i_am, 'processing config file ' + config_file )
+        Config.__debug( self, __name__, i_am, 'processing definitions file ' + defs_file )
 
         # read in a definitions file.
         # It is optional so it is ok if it does not exist
@@ -116,6 +161,36 @@ class Config(object):
         except (IOError, ValueError):
             raise
 
+
+    def __allowed( self, section, keyword, value ):
+        """
+        Not user callable.
+
+        returns 1 if allowed, 0 if not allowed
+        """
+
+        allowed = None
+        full_keyword = section + ':' + keyword
+
+        # general case
+        if keyword in self.defs:
+            if Config._DEFS_ALLOWED in self.defs[ keyword ]:
+                allowed = self.defs[ keyword ][ Config._DEFS_ALLOWED ]
+
+        # specific case over-rides general case
+        if full_keyword in self.defs:
+            if Config._DEFS_ALLOWED in self.defs[ full_keyword ]:
+                allowed = self.defs[ full_keyword ][ Config._DEFS_ALLOWED ]
+
+        # no allowed values found, so allow anything
+        if allowed == None: return 1
+
+        for str in allowed:
+            if str == value:
+                return 1
+
+        return 0
+    
 
 
     def __read_defs_file( self, defs_file ):
@@ -137,89 +212,214 @@ class Config(object):
         of #includes in the config file
         """
 
-        i_am            = __name__ + ":read_defs_file()"
-        keyword         = ""        # keyword in effect
-        allowed_types   = ( [ "scalar", "array", "hash" ] )
-        error_msg       = ""
-        num_errs        = 0
+        i_am = sys._getframe().f_code.co_name
+        error_msg = ""
+        num_errs  = 0
+        got_entry = 0     # flag for processing entry
+        got_data  = 0     # we read some data
 
-        line_number = 0 
+        # set up empty object
+        obj      = {}    # object of a definitions entry
+        keyword  = ""
+        section  = "" 
 
-        if __builtin__.G_debug:
-            print i_am + ": processing definitions file: " + defs_file
+        line_number  = 0 
+        continuation = 0     # flag for continuation line
+
+        Config.__debug( self, __name__, i_am, 'processing definitions file ' + defs_file )
 
         try:
             f = open( defs_file, "r" )
             for line in f:
                 line_number += 1
 
-                line2 = line.rstrip()                   # trailing whitespace
-                if line2 == "": continue                # blank lines
+                line2 = line.rstrip('\r\n\t ')
                 if line2.startswith( "#" ): continue    # comments
 
-                m = re.match( "^([\w+\-]+)\s*=\s*(.*)\s*$", line2 )
+                # See if this is a continuation from a previous line
+                if continuation == 1:
+                    line2 = last_str + line2.lstrip()
+
+                #  have to double-escape to get a single backslash!?  blech!
+                m = re.match( '^.*[^\\\\]\\\\$', line2 )
+                if m:
+                    continuation = 1
+                    dbg = 'got a continuation line on line #{0:d} in {1}'. \
+                        format( line_number, defs_file )
+                    Config.__debug( self, __name__, i_am, dbg ) ;
+                    last_str = line2
+                    last_str = last_str.rstrip( "\\" )
+                    continue
+                else:
+                    continuation = 0
+
+                if line2 == "":
+                    if got_data:
+                        # we got *some* definitions
+                        if got_entry:
+                            # we also got a 'keyword' definition.  good to go
+                            # finished with an entry.  save it
+
+                            if section != "":
+                                self.defs[ section + ":" + keyword ] = obj
+                            else:
+                                self.defs[ keyword ] = obj
+                        else:
+                            error = "Have not provided a keyword definition " + \
+                                    "by end of block on line #{0:d} in {1}". \
+                                format( line_number, defs_file )
+                            error_msg += error + '\n'      # add to other errors
+                            num_errs += 1
+
+                    keyword   = ""          # reset
+                    section   = ""          # reset
+                    got_entry = 0           # reset
+                    got_data  = 0           # reset
+                    obj       = {}          # new entry
+
+                    continue                # blank line
+
+                # keyword = something
+                m = re.match( "^([\w\-]+)\s*=\s*(.*)\s*$", line2 )
                 if m:
                     key   = m.group(1)
                     value = m.group(2)
                 else:
-                    error = "{0}: invalid line #{1:d} in {2} ({3})". \
-                        format( i_am, line_number, defs_file, line2 )
+                    error = "Invalid line #{0:d} in {1} ({2})". \
+                        format( line_number, defs_file, line2 )
                     error_msg += error + '\n'      # add to other errors
                     num_errs += 1
+                    continue
 
-                if key == "keyword":
-                    self.defs_keywords[ value ] = value
-                    self.defs_ok_keywords[ value ] = 1
+                if key == Config._DEFS_KEYWORD:
                     keyword = value
-                elif key == "type":
-                    if value not in allowed_types:
-                        error = "{0}: invalid type ({1}) line #{2:d} in {3} ({4})". \
-                            format( i_am, value, line_number, defs_file, line2 )
+                    section = ""        # default
+                    full_keyword = keyword
+                    # match section:keyword
+                    m = re.match( "^([\w\-]+):([\w\-]+)$", value )
+                    if m:
+                        section = m.group(1)
+                        keyword = m.group(2)
+                        full_keyword = section + ':' + keyword
+
+                    obj[ Config._DEFS_KEYWORD ] = keyword
+                    obj[ Config._DEFS_SECTION ] = section
+                    got_entry = 1
+                    got_data  = 1
+
+                    self.defs_ok_keywords[ full_keyword ] = 1
+                elif key == Config._DEFS_TYPE:
+                    if value not in Config._ALLOWED_TYPES:
+                        error = "Invalid type ({0}) line #{1:d} in {2} ({3})". \
+                            format( value, line_number, defs_file, line2 )
                         error_msg += error + '\n'      # add to other errors
                         num_errs += 1
-                    self.defs_type[ keyword ] = value
-                elif key == "separator":
-                    self.defs_separator[ keyword ] = value
-                elif key == "allowed-values":
+                        continue
+
+                    got_data  = 1
+                    obj[ Config._DEFS_TYPE ] = value
+                elif key == Config._DEFS_SEPARATOR:
+                    # get rid of surrounding matching quotes
+                    m = re.match( "^\'(.*)\'$", value )
+                    if m: value = m.group(1)
+
+                    m = re.match( "^\"(.*)\"$", value )
+                    if m: value = m.group(1)
+
+                    got_data  = 1
+                    obj[ Config._DEFS_SEPARATOR ] = value
+                elif key == Config._DEFS_ALLOWED:
+
+                    # if the user escapes a comma or backslash to have it part
+                    # of the data, then hide it for now
+
+                    value = value.replace( '\\\\', Config._HIDE_BACKSLASH )
+                    value = value.replace( '\\,',  Config._HIDE_SEPARATOR )
+
+                    got_data  = 1
                     values = value.split( "," )
-                    self.defs_ok_values[ keyword ] = []
+                    obj[ Config._DEFS_ALLOWED ] = []
                     for v in values:
                         v = v.strip()       # leading  and trailing whitespace
-                        self.defs_ok_values[ keyword ].append( v )
+                        # get rid of surrounding matching quotes
+                        m = re.match( "^\'(.*)\'$", v )
+                        if m: v = m.group(1)
+                        m = re.match( "^\"(.*)\"$", v )
+                        if m: v = m.group(1)
+
+                        # put any separators back but without the backslash
+                        v = v.replace( Config._HIDE_SEPARATOR, ',' )
+
+                        # now put any dual backslashes back - but only one
+                        v = v.replace( Config._HIDE_BACKSLASH, '\\' )
+
+                        obj[ Config._DEFS_ALLOWED ].append( v )
                 else:
-                    error = "{0}: invalid keyword ({1}) line #{2:d} in {3} ({4})". \
-                        format( i_am, key, line_number, defs_file, line2 )
+                    error = "Invalid keyword ({0}) line #{1:d} in {2} ({3})". \
+                        format( key, line_number, defs_file, line2 )
                     error_msg += error + '\n'      # add to other errors
                     num_errs += 1
+                    continue
 
             f.close
+
+            # finish up outstanding entry if it exists
+            if got_data:
+                # we got *some* definitions
+                if got_entry:
+                    # we also got a 'keyword' definition.  good to go
+                    # finished with an entry.  save it
+
+                    if section != "":
+                        self.defs[ section + ":" + keyword ] = obj
+                    else:
+                        self.defs[ keyword ] = obj
+                else:
+                    error = "Have not provided a keyword definition " + \
+                            "by end of block on line #{0:d} in {1}". \
+                        format( line_number, defs_file )
+                    error_msg += error + '\n'      # add to other errors
+                    num_errs += 1
 
             if num_errs > 0:
                 error_msg = error_msg.strip()   # strip trailing newline
                 raise SyntaxError( error_msg )
 
         except IOError as e:
-            if __builtin__.G_debug:
-                print i_am + ": could not open: " + defs_file
+            Config.__debug( self, __name__, i_am, 'could not open ' + defs_file )
             raise       # we ultimately ignore this further up the stack
 
         # print out our data structures if G_debug is set
 
-        if __builtin__.G_debug:
-            print i_am + ': data dump of definitions file ' + defs_file + ':'
-            for k in self.defs_keywords:
-                t = "scalar"
-                s = ","
+        if Config._DEBUG:
+            print '\ndata dump of definitions file ' + defs_file + ':'
+            for key in self.defs:
+                type    = Config._DEFAULT_TYPE
+                sep     = Config._DEFAULT_SEPARATOR
+                section = ""
 
-                print '\t' + k + ":"
-                if k in self.defs_type: t = self.defs_type[ k ]
-                if k in self.defs_separator: s = self.defs_separator[ k ]
-                if k in self.defs_ok_values:
+                if Config._DEFS_TYPE in self.defs[ key ]:
+                    type = self.defs[key][Config._DEFS_TYPE]
+                if Config._DEFS_KEYWORD in self.defs[ key ]:
+                    keyword = self.defs[key][Config._DEFS_KEYWORD]
+                if Config._DEFS_SECTION in self.defs[ key ]:
+                   section = self.defs[key][Config._DEFS_SECTION]
+                if Config._DEFS_SEPARATOR in self.defs[ key ]:
+                    sep = self.defs[key][Config._DEFS_SEPARATOR]
+
+                if section != "":
+                    print '\t' + section + ':' + keyword + ':'
+                else:
+                    print '\t' + keyword + ':'
+
+                print "\t\ttype: \'" + type + "\'"
+                print "\t\tseparator: \'" + sep + "\'"
+
+                if Config._DEFS_ALLOWED in self.defs[ key ]:
                     print "\t\tallowed values:"
-                    for v in self.defs_ok_values[k]:
+                    for v in self.defs[ key ][ Config._DEFS_ALLOWED ]:
                         print "\t\t\t\'" + v + "\'"
-                print "\t\tseparator: \'" + s + "\'"
-                print "\t\ttype: \'" + t + "\'"
+            print "\n"
 
 
     def __read_file( self, cnf_file ):
@@ -235,26 +435,37 @@ class Config(object):
             section2:
                 keyword4    = ...
 
+        It gets the 'type' of data from the definitions file, but you can
+        also specify it directly in the config file, such as:
+            section1:
+                keyword1 (array)   = value1, value2, value3    # for array
+                keyword2 (scalar)  = value1                    # for scalar
+                keyword3 (hash)    = key1=val1, key2=val2      # for hash
+
+        Any disagreement between the type given in the config file and the
+        definitions file will use the config file as authoritative.
+
+        It defaults to 'scalar', so it does not need to be provided.
+
         Continuation lines can be done with a backslash at the end of a line.
         It is recursive, using '#include file' to read in other config files.
         """
 
-        continuation        = 0     # flag for continuation line
-        i_am            = __name__ + ":read_file()"
+        continuation = 0     # flag for continuation line
+        i_am = sys._getframe().f_code.co_name
 
         self.recursion_depth += 1
         depth       = self.recursion_depth      # short-cut variable
         line_number = 0 
 
-        if __builtin__.G_debug:
-            debug_str = i_am + ": (depth=" + str(depth) + ")"
-            print debug_str + " processing config file ", cnf_file
+        debug_str = "(depth=" + str(depth) + ")"
+        Config.__debug( self, __name__, i_am, debug_str + ' processing config file ' + cnf_file )
 
         try:
             f = open( cnf_file, "r" )
             for line in f:
                 line_number += 1
-                str1 = line.rstrip()
+                str1 = line.rstrip('\r\n\t ')
 
                 # See if this is a continuation from a previous line
                 if continuation == 1:
@@ -262,16 +473,21 @@ class Config(object):
                 
                 # See if there is a include file
 
-                m = re.match( r"^#include\s+([\w/\.]+)$", str1 )
+                m = re.match( r"^#include\s+([\w/\.\-]+)$", str1 )
                 if m:
                     include_file = m.group(1)
                     Config.__read_file( self, include_file )
                     continue
 
                 if str1.startswith( "#" ): continue
+                if str1 == "": continue
 
-                if str1.endswith( "\\" ):
+                m = re.match( '^.*[^\\\\]\\\\$', str1 )
+                if m:
                     continuation = 1
+                    dbg = 'got a continuation line on line #{0:d} in {1}'. \
+                        format( line_number, cnf_file )
+                    Config.__debug( self, __name__, i_am, dbg ) ;
                     last_str = str1
                     last_str = last_str.rstrip( "\\" )
                     continue
@@ -279,9 +495,9 @@ class Config(object):
                     continuation = 0
 
                 # start of a new section
-                m = re.match( "^(\w+)[:]*\s*", str1 )
+                m = re.match( "^([\w\-]+)[:]*\s*", str1 )
                 if m:
-                    self.state = Config.STATE_SECTION
+                    self.state = Config._STATE_SECTION
                     self.section_name = m.group(1)
 
                     if self.section_name not in self.sections:
@@ -290,67 +506,156 @@ class Config(object):
 
                     continue
 
-                # inside a section
-                m = re.match( "^\s+([\w\.\-]+)\s*=\s*(.*)\s*$", str1 )
-                if m:
+
+                # test if inside a section
+                m  = re.match( "^\s+([\w\.\-]+)\s*=\s*(.*)\s*$", str1 )
+                m2 = re.match( "^\s+([\w\.\-]+)\s+\(([\w]+)\)\s*=\s*(.*)\s*$", str1 )
+
+                if m or m2:
                     # ok, it's a 'keyword = value(s)' line
-                    self.state = Config.STATE_KEYWORDS
-                    keyword  = m.group(1)
-                    value    = m.group(2)
+                    self.state = Config._STATE_KEYWORDS
+
+                    most_sig_type = None    # most significant 'type'
+                    if m2:
+                        # we have a 'type' that over-rides all others.  save it for now
+                        keyword       = m2.group(1)
+                        most_sig_type = m2.group(2)
+                        value         = m2.group(3)
+
+                        # sanity check
+                        if most_sig_type not in Config._ALLOWED_TYPES:
+                            error = "Invalid type ({0}) line #{1:d} in {2} ({3})". \
+                                format( most_sig_type, line_number, cnf_file, str1 )
+                            self.error_msg += error + '\n'      # add to other errors
+                            self.num_errs += 1
+                            continue
+                    else:
+                        keyword  = m.group(1)
+                        value    = m.group(2)
 
                     # see if allowed (defined) keyword
+                    full_keyword = self.section_name + ':' + keyword
                     if ((self.have_defs_file == 1) and (not self.accept_all_keys)):
-                        if keyword not in self.defs_ok_keywords:
-                            error = i_am + ": keyword (" + keyword + ") not defined " + \
-                                "on line " + str(line_number) + " in: " + cnf_file
+                        if ( keyword not in self.defs_ok_keywords ) and \
+                           ( full_keyword not in self.defs_ok_keywords ):
+                            error = "Keyword ({0}) not defined on line #{1:d} in {2} ({3})". \
+                                format( keyword, line_number, cnf_file, str1.lstrip() )
                             self.error_msg += error + '\n'      # add to other errors
                             self.num_errs += 1
                             continue
 
                     # defaults
-                    separator   = ","
-                    type        = "scalar"
-                    ok_values   = ""
+                    separator = Config._DEFAULT_SEPARATOR
+                    type      = None
+                    ok_values = None
 
-                    # need to find out what type of data this is
-                    # If we have a definitions file, over-ride our defaults
+                    # need to see if any definitions from definitions file
                     if self.have_defs_file == 1:
-                        if keyword in self.defs_keywords:
-                            if keyword in self.defs_type:
-                                type = self.defs_type[ keyword ]
-                            if keyword in self.defs_separator:
-                                separator   = self.defs_separator[ keyword ]
-                            if keyword in self.defs_ok_values:
-                                ok_values = self.defs_ok_values[ keyword ]
+                        # first try for most general case of 'keyword'
+                        if keyword in self.defs:
+                            if Config._DEFS_SEPARATOR in self.defs[ keyword ]:
+                                separator = self.defs[ keyword ][ Config._DEFS_SEPARATOR ]
+                            if Config._DEFS_ALLOWED in self.defs[ keyword ]:
+                                ok_values = self.defs[ keyword ][ Config._DEFS_ALLOWED ]
+                            if Config._DEFS_TYPE in self.defs[ keyword ]:
+                                type = self.defs[ keyword ][ Config._DEFS_TYPE ]
+                                self.generic_types[ keyword ] = type
 
-                    if __builtin__.G_debug: print debug_str + " type = " + type + \
-                        " for " + self.section_name + "/" + keyword
+                        # next try specific case
+                        if full_keyword in self.defs:
+                            if Config._DEFS_SEPARATOR in self.defs[ full_keyword ]:
+                                separator = self.defs[ full_keyword ][ Config._DEFS_SEPARATOR ]
+                            if Config._DEFS_ALLOWED in self.defs[ full_keyword ]:
+                                ok_values = self.defs[ full_keyword ][ Config._DEFS_ALLOWED ]
+                            if Config._DEFS_TYPE in self.defs[ full_keyword ]:
+                                type = self.defs[ full_keyword ][ Config._DEFS_TYPE ]
+                                if not self.section_name in self.specific_types:
+                                    self.specific_types[ self.section_name ] = {}
+                                self.specific_types[ self.section_name ][ keyword ] = type
+
+                    # now see if we had the type defined in the actual data file
+                    # If so, make sure it also matches if also given in defs file
+
+                    if most_sig_type != None:
+                        if type != None and most_sig_type != type:
+                            error = "Type given in defs file ({0}) does not match " \
+                                    "type given in config file ({1}) for section \'{2}\', " \
+                                    "keyword \'{3}\' on line {4} in {5}". \
+                                    format( type, most_sig_type, self.section_name, \
+                                        keyword, line_number, cnf_file )
+
+                            self.error_msg += error + '\n'      # add to other errors
+                            self.num_errs += 1
+                            continue
+
+                        type = most_sig_type
+                        if not self.section_name in self.specific_types:
+                            self.specific_types[ self.section_name ] = {}
+                        self.specific_types[ self.section_name ][ keyword ] = type
+
+                    if type == None:
+                        type = Config._DEFAULT_TYPE
+                        self.generic_types[ keyword ] = type
+
+                    Config.__debug( self, __name__, i_am, debug_str + " type = " + \
+                        type + " for " + self.section_name + "/" + keyword )
+
+
+                    # if the user escapes a comma or backslash to have it part
+                    # of the data, then hide it for now
+
+                    value = value.replace( '\\\\', Config._HIDE_BACKSLASH )
+                    value = value.replace( '\\' + separator,  Config._HIDE_SEPARATOR )
 
                     obj = value         # default (scalar)
-                    if type == "scalar":
+                    if type == Config._TYPE_SCALAR:
                         # get rid of surrounding matching quotes
                         m = re.match( "^\'(.*)\'$", value )
-                        if m:
-                            value = m.group(1)
+                        if m: value = m.group(1)
                         m = re.match( "^\"(.*)\"$", value )
-                        if m:
-                            value = m.group(1)
+                        if m: value = m.group(1)
+
+                        # put any separators back but without the backslash
+                        value = value.replace( Config._HIDE_SEPARATOR, separator )
+
+                        # now put any dual backslashes back - but only one
+                        value = value.replace( Config._HIDE_BACKSLASH, '\\' )
+
+                        if Config.__allowed( self, self.section_name, keyword, value ) == 0:
+                            error = "Value \'{0}\' not allowed on line #{1:d} in {2}: \'{3}\'". \
+                                format( value, line_number, cnf_file, str1 )
+                            self.error_msg += error + '\n'      # add to other errors
+                            self.num_errs += 1
+                            continue
+
                         obj = value
-                    elif type == "array":
+
+                    elif type == Config._TYPE_ARRAY:
                         values = value.split( separator )
                         obj = []
                         for val in values:
-                            val = val.lstrip()
                             val = val.strip()
                             # get rid of surrounding matching quotes
                             m = re.match( "^\'(.*)\'$", val )
-                            if m:
-                                val = m.group(1)
+                            if m: val = m.group(1)
                             m = re.match( "^\"(.*)\"$", val )
-                            if m:
-                                val = m.group(1)
-                            obj.append( val )
-                    elif type == "hash":
+                            if m: val = m.group(1)
+
+                            # put any separators back but without the backslash
+                            val = val.replace( Config._HIDE_SEPARATOR, separator )
+
+                            # now put any dual backslashes back - but only one
+                            val = val.replace( Config._HIDE_BACKSLASH, '\\' )
+
+                            if Config.__allowed( self, self.section_name, keyword, val ) == 0:
+                                error = "Value \'{0}\' not allowed on line #{1:d} in {2}: \'{3}\'". \
+                                    format( val, line_number, cnf_file, str1 )
+                                self.error_msg += error + '\n'      # add to other errors
+                                self.num_errs += 1
+                            else:
+                                obj.append( val )
+
+                    elif type == Config._TYPE_HASH:
                         # we need to build a associative array (dictionary)
                         values = value.split( separator )
                         obj = {}
@@ -363,11 +668,29 @@ class Config(object):
                             # get rid of surrounding matching quotes
                             m = re.match( "^\'(.*)\'$", v )
                             if m: v = m.group(1)
-
                             m = re.match( "^\"(.*)\"$", v )
                             if m: v = m.group(1)
 
-                            obj[ k ] = v
+                            # put any separators back but without the backslash
+                            v = v.replace( Config._HIDE_SEPARATOR, separator )
+
+                            # now put any dual backslashes back - but only one
+                            v = v.replace( Config._HIDE_BACKSLASH, '\\' )
+
+                            if Config.__allowed( self, self.section_name, keyword, v ) == 0:
+                                error = "Value \'{0}\' not allowed on line #{1:d} in {2}: \'{3}\'". \
+                                    format( v, line_number, cnf_file, str1 )
+                                self.error_msg += error + '\n'      # add to other errors
+                                self.num_errs += 1
+                            else:
+                                obj[ k ] = v
+
+                    else:
+                        error = "Unknown type ({0}) on line #{1:d} in {2}: \'{3}\'". \
+                            format( type , line_number, cnf_file, str1 )
+                        self.error_msg += error + '\n'      # add to other errors
+                        self.num_errs += 1
+                        continue
 
                     # this is dopey.  There has to be a easier way...
                     hash1 = self.sections[ self.section_name ]
@@ -376,6 +699,13 @@ class Config(object):
 
                     continue        # not really needed (yet)
 
+                else:
+                    error = "Unrecognized line on line #{0:d} in {1}: \'{2}\'". \
+                        format( line_number, cnf_file, str1 )
+                    self.error_msg += error + '\n'      # add to other errors
+                    self.num_errs += 1
+                    continue
+
             f.close
 
             if (( depth == 1 ) and ( self.num_errs > 0 )):
@@ -383,15 +713,16 @@ class Config(object):
                 raise ValueError(self.error_msg )
 
             # debugging info when we are all done the top (recursive) level
-            if ( __builtin__.G_debug ) and ( depth == 1 ):
-                print debug_str + " data dump from config file" + cnf_file + ":"
+            if ( Config._DEBUG ) and ( depth == 1 ):
+                print '\ndata dump from config file ' + cnf_file + ':'
                 for s in  self.sections:
-                    print "\t" + s                  # section
+                    print "\t" + s
                     for k in self.sections[ s ]:
-                        print "\t\t", k, '=',       # keyword
+                        print "\t\t", k, '=',
                         obj = self.sections[ s ]
                         v = obj[k]
-                        print "\'" + str(v)  + "\'" # value
+                        print "\'" + str(v)  + "\'"
+                print '\n'
 
         except IOError:
             # we don't want to clobber our error message deep down in a
@@ -401,7 +732,7 @@ class Config(object):
             # in the error message
 
             if not self.error_msg:
-                self.error_msg = i_am + ': ' + 'Cant open file: ' + cnf_file
+                self.error_msg = 'Cant open file: ' + cnf_file
                 raise IOError( self.error_msg )
             else:
                 raise
@@ -413,46 +744,76 @@ class Config(object):
             self.recursion_depth -= 1
 
 
-    def get_type( self, keyword ):
+    def __debug( self, module, func, str ):
+        if Config._DEBUG:
+            print "debug: {0}: {1}(): {2}".format( module, func, str )
+
+
+    # to be backward compatible with the first version which only took
+    # a keyword , we'll use *args instead of ( section, keyword )
+
+    def get_type( self, *args ):
         """
         Get the type of a keyword.
 
         type = conf.get_type( keyword )
+        type = conf.get_type( section, keyword )
 
         type can be any of 'scalar', 'array' or 'hash'.
         The config format could be any of:
             keyword1 = value1   (scalar)
             keyword2 = value2, value3, value4  (array)
             keyword3 = key5 = value5, key6 = value6, key7 = value7 (hash)
+
+        If the keyword is not found, the default type of 'scalar' is returned
         """
 
-        i_am    = __name__ + ":get_type()"
+        i_am = sys._getframe().f_code.co_name
 
-        type    = "scalar"      # default
+        num_args = len( args )
+        if num_args > 1:
+            # ignore any excess arguments
+            section = args[0]
+            keyword = args[1]
+            if not isinstance( section, basestring):
+                raise ValueError( i_am + ": section argument is not a string" )
+        elif  num_args == 1:
+            keyword = args[0]
+            if not isinstance( keyword, basestring):
+                raise ValueError( i_am + ": keyword argument is not a string" )
+        else:
+            raise ValueError( i_am + ": missing argument(s)" )
 
-        if not isinstance( keyword, basestring):
-            raise ValueError( i_am + ": keyword argument is not a string" )
+        # set a default type
+        type = Config._DEFAULT_TYPE
 
-        if self.have_defs_file == 0: return( type )
+        # next try to get a generic type
+        if keyword in self.generic_types:
+            type = self.generic_types[ keyword ]
+            Config.__debug( self, __name__, i_am, \
+                'found a GENERIC type of ' + type + ' for keyword=' + keyword )
 
-        if keyword in self.defs_keywords:
-            if __builtin__.G_debug:
-                print i_am + ': (debug): we have a definitions file' + \
-                    self.defs_file
-
-            if keyword in self.defs_type:
-                type = self.defs_type[ keyword ]
-                if __builtin__.G_debug:
-                    print i_am + ': (debug): found a type of ' + type \
-                          + ' from ' + self.defs_file
+        # and now try to get a specific type
+        if num_args > 1:
+            if section in self.specific_types:
+                if keyword in self.specific_types[ section ]:
+                    type = self.specific_types[ section ][ keyword ]
+                    Config.__debug( self, __name__, i_am, \
+                        'found a SPECIFIC type of ' + type + ' for ' + \
+                        'section=' + section + ', keyword=' + keyword )
 
         return( type )
 
 
-    def get_separator( self, keyword ):
+
+    # to be backward compatible with the first version which only took
+    # a keyword , we'll # use *args instead of ( section, keyword )
+
+    def get_separator( self, *args ):
         """
         Get the separator of values.
             separator = conf.get_separator( keyword )
+            separator = conf.get_separator( section, keyword )
 
         The default separator is a comma (,) unless changed in the
         definitions file with a entry like:
@@ -463,30 +824,58 @@ class Config(object):
             allowed-values  = IPv4, IPv6
             separator       = ,
 
-        The separator is not used for the 'allowed-values' as seen
+        The keyword can also provide the specific section name such as:
+            keyword         = IP:ip-domains
+        otherwise if no specific section is provided along with the keyword,
+        then the definition for that keyword given applies to all sections.
+
+        The separator is not used for the 'allowed-values' as specified
         above in the definitions file example, but used as a separator
         in the config file for value types that are 'array's and hash's.
+
+        If the keyword is not found, the default separator of ',' is returned
         """
 
-        i_am    = __name__ + ":get_separator()"
+        i_am = sys._getframe().f_code.co_name
 
-        separator = ","      # default
+        num_args = len( args )
+        if num_args > 1:
+            # ignore any excess arguments
+            section = args[0]
+            keyword = args[1]
+            if not isinstance( section, basestring):
+                raise ValueError( i_am + ": section argument is not a string" )
+        elif  num_args == 1:
+            keyword = args[0]
+            if not isinstance( keyword, basestring):
+                raise ValueError( i_am + ": keyword argument is not a string" )
+        else:
+            raise ValueError( i_am + ": missing argument(s)" )
 
-        if not isinstance( keyword, basestring):
-            raise ValueError( i_am + ": keyword argument is not a string" )
+        separator = Config._DEFAULT_SEPARATOR
+        if self.have_defs_file == 0:
+            return( separator )
 
-        if self.have_defs_file == 0: return( separator )
+        # first try for most general case of 'keyword'
+        if keyword in self.defs:
+            if Config._DEFS_SEPARATOR in self.defs[ keyword ]:
+                separator = self.defs[ keyword ][ Config._DEFS_SEPARATOR ]
+                Config.__debug( self, __name__, i_am, \
+                    'found a separator (' + separator + \
+                    ') for ALL keywords of ' + keyword + \
+                    ' in definitions file: ' + self.defs_file )
 
-        if keyword in self.defs_keywords:
-            if __builtin__.G_debug:
-                print i_am + ': (debug): we have a definitions file: ' + \
-                    self.defs_file
+        # next try specific case
+        if num_args > 1:
+            full_keyword = section + ':' + keyword
+            if full_keyword in self.defs:
+                if Config._DEFS_SEPARATOR in self.defs[ full_keyword ]:
+                    separator = self.defs[ full_keyword ][ Config._DEFS_SEPARATOR ]
 
-            if keyword in self.defs_separator:
-                separator = self.defs_separator[ keyword ]
-                if __builtin__.G_debug:
-                    print i_am + ': (debug): found a separator of ' + \
-                        "\'" + separator + "\'" + ' from ' + self.defs_file
+                    Config.__debug( self, __name__, i_am, \
+                        'found a separator (' + separator + \
+                        ') for ' + full_keyword + \
+                        ' in definitions file: ' + self.defs_file )
 
         return( separator )
 
@@ -497,7 +886,6 @@ class Config(object):
 
         sections = conf.get_sections()
         """
-        i_am    = __name__ + ":get_sections()"
 
         return( self.sections_ordered )
 
@@ -516,7 +904,7 @@ class Config(object):
                     ...
         """
 
-        i_am    = __name__ + ":get_keywords()"
+        i_am = sys._getframe().f_code.co_name
         keys = []
 
         if not isinstance( section , basestring):
@@ -526,9 +914,10 @@ class Config(object):
             for k in self.sections[ section ]:
                 keys.append( k )
         else:
-            if __builtin__.G_debug:
-                print i_am + ": could not find any keywords for section " \
-                    + "\'" + section + "\'"
+            error = "could not any keywords for section \'{0}\'". \
+                format( section )
+            Config.__debug( self, __name__, i_am, error )
+            raise ValueError( i_am + ": " + error )
 
         return( keys )
 
@@ -558,7 +947,8 @@ class Config(object):
         If the type is unknown to the program for a specific keyword,
         it can find out with a call to get_type().
         """
-        i_am    = __name__ + ":get_values()"
+
+        i_am = sys._getframe().f_code.co_name
 
         if not isinstance( section , basestring):
             raise ValueError( i_am + ": section argument is not a string" )
@@ -573,26 +963,86 @@ class Config(object):
                     v = obj[k]
                     return( v )
             else:
-                if __builtin__.G_debug:
-                    print i_am + ": could not find keyword \'" + \
-                        keyword + "\' in section \'" + section + "\'"
+                error = "could not find keyword \'{0}\' in section \'{1}\'". \
+                    format( keyword, section )
+                Config.__debug( self, __name__, i_am, error )
+                raise ValueError( i_am + ": " + error )
+
         else:
-            if __builtin__.G_debug:
-                print i_am + ": could not find section \'" + section + "\'"
+            error = "could not find section \'{0}\'".format( section )
+            Config.__debug( self, __name__, i_am, error )
+            raise ValueError( i_am + ": " + error )
+
         return( None )
 
+
+    @classmethod
+    def set_debug( cls, value ):
+
+        old_value = Config._DEBUG
+        if value == 0 or value == False:
+            state     = "OFF"
+            set_state = False
+            if old_value == True:
+                print "debug: setting debug to OFF"
+        else:
+            state     = "ON"
+            set_state = True
+            print "debug: setting debug to ON"
+
+        Config._DEBUG = set_state
+
+        return( old_value )
+
+            
 if __name__ == "__main__":
-    # test myself
+    # % python config.py [-d] [-u] [config-file [config-defs]]
+    # run with -u to set AcceptUndefinedKeywords for no errors from
+    # missing definitions - defaulting to scalar types
 
-    import sys
+    import sys, optparse
 
-    __builtin__.G_debug = False
+    config_file = 'configs/test.conf'
+    config_defs = 'configs/test-defs.conf'
+
+    p = optparse.OptionParser()
+    p.add_option( "-d", action="store_true", dest="debug" )
+    p.add_option( "--debug", action="store_true", dest="debug" )
+    p.add_option( "-u", action="store_true", dest="undef_keys" )
+    p.add_option( "--undef-keys", action="store_true", dest="undef_keys" )
+    p.add_option( "-N", action="store_true", dest="no_defs_file" )
+    p.add_option( "--no-defs", action="store_true", dest="no_defs_file" )
+
+    # set some option defaults
+    p.set_defaults( debug=False )
+    p.set_defaults( undef_keys=False )
+    p.set_defaults( no_defs_file=False)
+
+    opts, args = p.parse_args()
+
+    Config._DEBUG = opts.debug
+    undef_keys = opts.undef_keys
+
+    if len( args ) > 0:
+        config_file = args[0]
+    if len( args ) > 1:
+        config_defs = args[1]
+    if opts.no_defs_file:
+        config_defs = ""
+    
     try:
-        conf = Config( './test.conf', "./test-defs.conf", AcceptUndefinedKeywords=1)
+        conf = Config( config_file, config_defs, AcceptUndefinedKeywords=undef_keys)
     except ( IOError, SyntaxError, ValueError ) as err:
         sys.stderr.write( '%s\n' % str(err))
         sys.exit(1)
 
+    print 'Using config file: ', config_file
+    if config_defs != "":
+        print 'Using config definitions file: ', config_defs
+    else:
+        print "Not using a definitions file"
+
+    print ""
     sections = conf.get_sections()
     for section in sections:
         print section + ':'
