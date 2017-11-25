@@ -134,30 +134,6 @@ eg:<br>
 &nbsp;<br>
 sections&nbsp;=&nbsp;conf.<a href="#Config-get_sections">get_sections</a>()</tt></dd></dl>
 
-<dl><dt><a name="Config-get_separator"><strong>get_separator</strong></a>(self, *args)</dt><dd><tt>Get&nbsp;the&nbsp;separator&nbsp;of&nbsp;values.<br>
-&nbsp;&nbsp;&nbsp;&nbsp;separator&nbsp;=&nbsp;conf.<a href="#Config-get_separator">get_separator</a>(&nbsp;keyword&nbsp;)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;separator&nbsp;=&nbsp;conf.<a href="#Config-get_separator">get_separator</a>(&nbsp;section,&nbsp;keyword&nbsp;)<br>
-&nbsp;<br>
-The&nbsp;default&nbsp;separator&nbsp;is&nbsp;a&nbsp;comma&nbsp;(,)&nbsp;unless&nbsp;changed&nbsp;in&nbsp;the<br>
-definitions&nbsp;file&nbsp;with&nbsp;a&nbsp;entry&nbsp;like:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;separator&nbsp;=&nbsp;string<br>
-that&nbsp;goes&nbsp;with&nbsp;the&nbsp;keyword&nbsp;previously&nbsp;defined.&nbsp;&nbsp;ie:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;keyword&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;ip-domains<br>
-&nbsp;&nbsp;&nbsp;&nbsp;type&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;array<br>
-&nbsp;&nbsp;&nbsp;&nbsp;allowed-values&nbsp;&nbsp;=&nbsp;IPv4,&nbsp;IPv6<br>
-&nbsp;&nbsp;&nbsp;&nbsp;separator&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;,<br>
-&nbsp;<br>
-The&nbsp;keyword&nbsp;can&nbsp;also&nbsp;provide&nbsp;the&nbsp;specific&nbsp;section&nbsp;name&nbsp;such&nbsp;as:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;keyword&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;IP:ip-domains<br>
-otherwise&nbsp;if&nbsp;no&nbsp;specific&nbsp;section&nbsp;is&nbsp;provided&nbsp;along&nbsp;with&nbsp;the&nbsp;keyword,<br>
-then&nbsp;the&nbsp;definition&nbsp;for&nbsp;that&nbsp;keyword&nbsp;given&nbsp;applies&nbsp;to&nbsp;all&nbsp;sections.<br>
-&nbsp;<br>
-The&nbsp;separator&nbsp;is&nbsp;not&nbsp;used&nbsp;for&nbsp;the&nbsp;'allowed-values'&nbsp;as&nbsp;specified<br>
-above&nbsp;in&nbsp;the&nbsp;definitions&nbsp;file&nbsp;example,&nbsp;but&nbsp;used&nbsp;as&nbsp;a&nbsp;separator<br>
-in&nbsp;the&nbsp;config&nbsp;file&nbsp;for&nbsp;value&nbsp;types&nbsp;that&nbsp;are&nbsp;'array's&nbsp;and&nbsp;hash's.<br>
-&nbsp;<br>
-If&nbsp;the&nbsp;keyword&nbsp;is&nbsp;not&nbsp;found,&nbsp;the&nbsp;default&nbsp;separator&nbsp;of&nbsp;','&nbsp;is&nbsp;returned</tt></dd></dl>
-
 <dl><dt><a name="Config-get_type"><strong>get_type</strong></a>(self, *args)</dt><dd><tt>Get&nbsp;the&nbsp;type&nbsp;of&nbsp;a&nbsp;keyword.<br>
 &nbsp;<br>
 type&nbsp;=&nbsp;conf.<a href="#Config-get_type">get_type</a>(&nbsp;keyword&nbsp;)<br>

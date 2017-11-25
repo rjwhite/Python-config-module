@@ -44,7 +44,6 @@ To see documentation, do a pydoc config
 - get_keywords()
 - get_type()
 - get_values()
-- get_separator()
 
 ## Config file example
     # This is a comment

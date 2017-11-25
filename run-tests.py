@@ -82,71 +82,40 @@ num_errs += expecting( 7, 'get type (hash) for keyword=colours', type, 'hash' )
 
 
 try:
-    separator = conf.get_separator( 'things' )
-except ( IOError, SyntaxError, ValueError ) as err:
-    pass
-num_errs += expecting( 8, 'get separator for keyword=things', separator, ',' )
-
-try:
     type = conf2.get_type( 'bikes', 'yamaha' )
 except ( IOError, SyntaxError, ValueError ) as err:
     pass
-num_errs += expecting( 9, 'get type (array) for bikes:yamaha', type, 'array' )
+num_errs += expecting( 8, 'get type (array) for bikes:yamaha', type, 'array' )
 
 try:
     type = conf2.get_type( 'bikes', 'honda')
 except ( IOError, SyntaxError, ValueError ) as err:
     pass
-num_errs += expecting( 10, 'get type (scalar) for bikes:honda', type, 'scalar' )
+num_errs += expecting( 9, 'get type (scalar) for bikes:honda', type, 'scalar' )
 
 try:
     value = conf2.get_values( 'bikes', 'ducati' )
 except ( IOError, SyntaxError, ValueError ) as err:
     pass
-num_errs += expecting( 11, 'scalar value for bikes:ducati', value, '2001' )
+num_errs += expecting( 10, 'scalar value for bikes:ducati', value, '2001' )
 
 try:
     type = conf2.get_type( 'planets', 'big')
 except ( IOError, SyntaxError, ValueError ) as err:
     pass
-num_errs += expecting( 12, 'get type (scalar) for planets:big', type, 'scalar' )
+num_errs += expecting( 11, 'get type (scalar) for planets:big', type, 'scalar' )
 
 try:
     type = conf2.get_type( 'planets', 'small')
 except ( IOError, SyntaxError, ValueError ) as err:
     pass
-num_errs += expecting( 13, 'get type (array) for planets:small', type, 'array' )
+num_errs += expecting( 12, 'get type (array) for planets:small', type, 'array' )
 
 try:
     type = conf2.get_type( 'big')
 except ( IOError, SyntaxError, ValueError ) as err:
     pass
-num_errs += expecting( 14, 'get type (scalar) for keyword big', type, 'scalar' )
-
-try:
-    separator = conf2.get_separator( 'small' )
-except ( IOError, SyntaxError, ValueError ) as err:
-    pass
-num_errs += expecting( 15, 'get separator for keyword=small', separator, ':' )
-
-try:
-    separator = conf2.get_separator( 'planets', 'small' )
-except ( IOError, SyntaxError, ValueError ) as err:
-    pass
-num_errs += expecting( 16, 'get separator for planets:small', separator, ':' )
-
-try:
-    separator = conf.get_separator( 'section1', 'array1' )
-except ( IOError, SyntaxError, ValueError ) as err:
-    pass
-num_errs += expecting( 17, 'get separator for section1:array1', separator, ':' )
-
-try:
-    separator = conf.get_separator( 'array1' )
-except ( IOError, SyntaxError, ValueError ) as err:
-    pass
-num_errs += expecting( 18, 'get separator for array1', separator, ',' )
-
+num_errs += expecting( 13, 'get type (scalar) for keyword big', type, 'scalar' )
 
 if num_errs:
     print "\nFAILed tests with {0:d} errors".format( num_errs )

@@ -28,3 +28,6 @@
         - updated README.md
         - created Makefile
         - added LICENSE.txt
+
+2.1     Nov 24, 2017
+        - got rid of get_separator function.  It provided no value.

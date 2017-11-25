@@ -105,7 +105,7 @@ class Config(object):
     _HIDE_SEPARATOR     = 'EvIlCoMmA'
     _HIDE_BACKSLASH     = 'EvIlBaCkSlAsH'
 
-    _VERSION            = '2.0'
+    _VERSION            = '2.1'
 
     _DEBUG              = 0     # use set_debug() to set
 
@@ -804,80 +804,6 @@ class Config(object):
 
         return( type )
 
-
-
-    # to be backward compatible with the first version which only took
-    # a keyword , we'll # use *args instead of ( section, keyword )
-
-    def get_separator( self, *args ):
-        """
-        Get the separator of values.
-            separator = conf.get_separator( keyword )
-            separator = conf.get_separator( section, keyword )
-
-        The default separator is a comma (,) unless changed in the
-        definitions file with a entry like:
-            separator = string
-        that goes with the keyword previously defined.  ie:
-            keyword         = ip-domains
-            type            = array
-            allowed-values  = IPv4, IPv6
-            separator       = ,
-
-        The keyword can also provide the specific section name such as:
-            keyword         = IP:ip-domains
-        otherwise if no specific section is provided along with the keyword,
-        then the definition for that keyword given applies to all sections.
-
-        The separator is not used for the 'allowed-values' as specified
-        above in the definitions file example, but used as a separator
-        in the config file for value types that are 'array's and hash's.
-
-        If the keyword is not found, the default separator of ',' is returned
-        """
-
-        i_am = sys._getframe().f_code.co_name
-
-        num_args = len( args )
-        if num_args > 1:
-            # ignore any excess arguments
-            section = args[0]
-            keyword = args[1]
-            if not isinstance( section, basestring):
-                raise ValueError( i_am + ": section argument is not a string" )
-        elif  num_args == 1:
-            keyword = args[0]
-            if not isinstance( keyword, basestring):
-                raise ValueError( i_am + ": keyword argument is not a string" )
-        else:
-            raise ValueError( i_am + ": missing argument(s)" )
-
-        separator = Config._DEFAULT_SEPARATOR
-        if self.have_defs_file == 0:
-            return( separator )
-
-        # first try for most general case of 'keyword'
-        if keyword in self.defs:
-            if Config._DEFS_SEPARATOR in self.defs[ keyword ]:
-                separator = self.defs[ keyword ][ Config._DEFS_SEPARATOR ]
-                Config.__debug( self, __name__, i_am, \
-                    'found a separator (' + separator + \
-                    ') for ALL keywords of ' + keyword + \
-                    ' in definitions file: ' + self.defs_file )
-
-        # next try specific case
-        if num_args > 1:
-            full_keyword = section + ':' + keyword
-            if full_keyword in self.defs:
-                if Config._DEFS_SEPARATOR in self.defs[ full_keyword ]:
-                    separator = self.defs[ full_keyword ][ Config._DEFS_SEPARATOR ]
-
-                    Config.__debug( self, __name__, i_am, \
-                        'found a separator (' + separator + \
-                        ') for ' + full_keyword + \
-                        ' in definitions file: ' + self.defs_file )
-
-        return( separator )
 
 
     def get_sections( self ):
