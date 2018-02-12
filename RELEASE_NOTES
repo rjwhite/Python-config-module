@@ -31,3 +31,16 @@
 
 2.1     Nov 24, 2017
         - got rid of get_separator function.  It provided no value.
+
+3.0     Feb 12, 2018
+        - can now accept comments with initial whitespace and not just
+          begining of the line
+        - better error checking for hash values - that they really are
+          "keyword = value" pairs
+        - values in hashes can now have '=' signs in them
+        - code refactoring.  simplifying, removing crap
+        - the 'main' tets program in module much smarter and has real
+          options checking (and --help|-h option
+        - added more entries to configs/test-defs.conf so that 
+          AcceptUndefinedKeywords does not need t obe setting for testing
+          of main program in module without the --accept option

@@ -105,7 +105,7 @@ class Config(object):
     _HIDE_SEPARATOR     = 'EvIlCoMmA'
     _HIDE_BACKSLASH     = 'EvIlBaCkSlAsH'
 
-    _VERSION            = '2.1'
+    _VERSION            = '3.0'
 
     _DEBUG              = 0     # use set_debug() to set
 
@@ -141,6 +141,7 @@ class Config(object):
         self.section_name       = ""        # current section being processed
         self.sections           = {}
         self.sections_ordered   = []
+        self.keywords_ordered   = {}
 
         Config.__debug( self, __name__, i_am, 'processing config file ' + config_file )
         Config.__debug( self, __name__, i_am, 'processing definitions file ' + defs_file )
@@ -235,6 +236,9 @@ class Config(object):
 
                 line2 = line.rstrip('\r\n\t ')
                 if line2.startswith( "#" ): continue    # comments
+                m = re.match( "^\s*\#", line2 )
+                if m:
+                    continue                            # indented comment 
 
                 # See if this is a continuation from a previous line
                 if continuation == 1:
@@ -467,10 +471,6 @@ class Config(object):
                 line_number += 1
                 str1 = line.rstrip('\r\n\t ')
 
-                # See if this is a continuation from a previous line
-                if continuation == 1:
-                    str1 = last_str + str1.lstrip()
-                
                 # See if there is a include file
 
                 m = re.match( r"^#include\s+([\w/\.\-]+)$", str1 )
@@ -479,8 +479,15 @@ class Config(object):
                     Config.__read_file( self, include_file )
                     continue
 
-                if str1.startswith( "#" ): continue
-                if str1 == "": continue
+                if str1.startswith( "#" ): continue     # comment
+                m = re.match( "^\s*\#", str1 )
+                if m:
+                    continue                            # indented comment 
+                if str1 == "": continue                 # blank line
+
+                # See if this is a continuation from a previous line
+                if continuation == 1:
+                    str1 = last_str + str1.lstrip()
 
                 m = re.match( '^.*[^\\\\]\\\\$', str1 )
                 if m:
@@ -494,6 +501,7 @@ class Config(object):
                 else:
                     continuation = 0
 
+
                 # start of a new section
                 m = re.match( "^([\w\-]+)[:]*\s*", str1 )
                 if m:
@@ -503,11 +511,14 @@ class Config(object):
                     if self.section_name not in self.sections:
                         self.sections[ self.section_name ] = {}
                         self.sections_ordered.append( self.section_name )
+                        self.keywords_ordered[ self.section_name ] = []
 
                     continue
 
 
                 # test if inside a section
+                # m:    "    this = that"
+                # m2:   "    this (type) = that"
                 m  = re.match( "^\s+([\w\.\-]+)\s*=\s*(.*)\s*$", str1 )
                 m2 = re.match( "^\s+([\w\.\-]+)\s+\(([\w]+)\)\s*=\s*(.*)\s*$", str1 )
 
@@ -660,30 +671,39 @@ class Config(object):
                         values = value.split( separator )
                         obj = {}
                         for val in values:
-                            k, v = val.split( '=' )
-                            # strip surrounding whitespace
-                            k = k.strip()
-                            v = v.strip()
-
-                            # get rid of surrounding matching quotes
-                            m = re.match( "^\'(.*)\'$", v )
-                            if m: v = m.group(1)
-                            m = re.match( "^\"(.*)\"$", v )
-                            if m: v = m.group(1)
-
-                            # put any separators back but without the backslash
-                            v = v.replace( Config._HIDE_SEPARATOR, separator )
-
-                            # now put any dual backslashes back - but only one
-                            v = v.replace( Config._HIDE_BACKSLASH, '\\' )
-
-                            if Config.__allowed( self, self.section_name, keyword, v ) == 0:
-                                error = "Value \'{0}\' not allowed on line #{1:d} in {2}: \'{3}\'". \
-                                    format( v, line_number, cnf_file, str1 )
+                            m  = re.match( "^\s*([\w\.\-]+)\s*=\s*(.*)\s*$", val )
+                            if not m: 
+                                error = "did not find a KEYWORD = VALUE in hash on line #{0:d} in {1}: \'{2}\'". \
+                                    format( line_number, cnf_file, val )
                                 self.error_msg += error + '\n'      # add to other errors
                                 self.num_errs += 1
                             else:
-                                obj[ k ] = v
+                                k = m.group(1)
+                                v = m.group(2)
+
+                                # strip surrounding whitespace
+                                k = k.strip()
+                                v = v.strip()
+
+                                # get rid of surrounding matching quotes
+                                m = re.match( "^\'(.*)\'$", v )
+                                if m: v = m.group(1)
+                                m = re.match( "^\"(.*)\"$", v )
+                                if m: v = m.group(1)
+
+                                # put any separators back but without the backslash
+                                v = v.replace( Config._HIDE_SEPARATOR, separator )
+
+                                # now put any dual backslashes back - but only one
+                                v = v.replace( Config._HIDE_BACKSLASH, '\\' )
+
+                                if Config.__allowed( self, self.section_name, keyword, v ) == 0:
+                                    error = "Value \'{0}\' not allowed on line #{1:d} in {2}: \'{3}\'". \
+                                        format( v, line_number, cnf_file, str1 )
+                                    self.error_msg += error + '\n'      # add to other errors
+                                    self.num_errs += 1
+                                else:
+                                    obj[ k ] = v
 
                     else:
                         error = "Unknown type ({0}) on line #{1:d} in {2}: \'{3}\'". \
@@ -692,10 +712,10 @@ class Config(object):
                         self.num_errs += 1
                         continue
 
-                    # this is dopey.  There has to be a easier way...
-                    hash1 = self.sections[ self.section_name ]
-                    hash1[ keyword ] = obj
-                    self.sections[ self.section_name ] = hash1
+                    self.sections[ self.section_name ][ keyword ] = obj
+
+                    # we want an ordered list of keyword for each section
+                    self.keywords_ordered[ self.section_name ].append( keyword )
 
                     continue        # not really needed (yet)
 
@@ -837,7 +857,7 @@ class Config(object):
             raise ValueError( i_am + ": section argument is not a string" )
 
         if section in self.sections:
-            for k in self.sections[ section ]:
+            for k in self.keywords_ordered[ section ]:
                 keys.append( k )
         else:
             error = "could not any keywords for section \'{0}\'". \
@@ -907,12 +927,10 @@ class Config(object):
 
         old_value = Config._DEBUG
         if value == 0 or value == False:
-            state     = "OFF"
             set_state = False
             if old_value == True:
                 print "debug: setting debug to OFF"
         else:
-            state     = "ON"
             set_state = True
             print "debug: setting debug to ON"
 
@@ -922,45 +940,48 @@ class Config(object):
 
             
 if __name__ == "__main__":
-    # % python config.py [-d] [-u] [config-file [config-defs]]
-    # run with -u to set AcceptUndefinedKeywords for no errors from
-    # missing definitions - defaulting to scalar types
+    # % python config.py [-d] [-a] [-h] [-c config] [-f defs-file]
 
-    import sys, optparse
+    import sys
 
-    config_file = 'configs/test.conf'
+    config_file = 'configs/config1.conf'
     config_defs = 'configs/test-defs.conf'
+    debug       = False
+    undef_keys  = False
 
-    p = optparse.OptionParser()
-    p.add_option( "-d", action="store_true", dest="debug" )
-    p.add_option( "--debug", action="store_true", dest="debug" )
-    p.add_option( "-u", action="store_true", dest="undef_keys" )
-    p.add_option( "--undef-keys", action="store_true", dest="undef_keys" )
-    p.add_option( "-N", action="store_true", dest="no_defs_file" )
-    p.add_option( "--no-defs", action="store_true", dest="no_defs_file" )
+    num_args = len( sys.argv )
+    i = 1
+    while i < num_args:
+        arg = sys.argv[i]
+        if arg == '-c' or arg == '--config':
+            i = i + 1 ;     config_file = sys.argv[i]
+        elif arg == '-f' or arg == '--defs':
+            i = i + 1 ;     config_defs = sys.argv[i]
+        elif arg == '-d' or arg == '--debug':
+            debug = True
+        elif arg == '-a' or arg == '--accept':
+            undef_keys = True
+        elif arg == '-h' or arg == '--help':
+            print "python {0:s} [option]*".format( sys.argv[0] )
+            print "   [-a|--accept] (AcceptUndefinedKeywords)"
+            print "   [-c|--config] config-file (default={0:s})".format( config_file )
+            print "   [-f|--defs]   defs-file (default={0:s})".format( config_defs )
+            print "   [-d|--debug]  (debug)"
+            print "   [-h|--help]   (help)"
+            sys.exit(0)
+        else:
+            print "unknown option: {0:s}".format( arg )
+            sys.exit(1)
 
-    # set some option defaults
-    p.set_defaults( debug=False )
-    p.set_defaults( undef_keys=False )
-    p.set_defaults( no_defs_file=False)
+        i = i+1
 
-    opts, args = p.parse_args()
-
-    Config._DEBUG = opts.debug
-    undef_keys = opts.undef_keys
-
-    if len( args ) > 0:
-        config_file = args[0]
-    if len( args ) > 1:
-        config_defs = args[1]
-    if opts.no_defs_file:
-        config_defs = ""
-    
     try:
         conf = Config( config_file, config_defs, AcceptUndefinedKeywords=undef_keys)
     except ( IOError, SyntaxError, ValueError ) as err:
         sys.stderr.write( '%s\n' % str(err))
         sys.exit(1)
+
+    Config.set_debug( debug )
 
     print 'Using config file: ', config_file
     if config_defs != "":
@@ -968,12 +989,25 @@ if __name__ == "__main__":
     else:
         print "Not using a definitions file"
 
-    print ""
+    print "Version = {0:s}\n".format( Config._VERSION )
     sections = conf.get_sections()
     for section in sections:
         print section + ':'
         keywords = conf.get_keywords( section )
         for keyword in keywords:
-            print "\t" + keyword + ':'
+            type = conf.get_type( section, keyword )
+            print "   {0:s}  ({1:s}):".format( keyword, type )
             values = conf.get_values( section, keyword )
-            print "\t\t", values
+            if type == 'scalar':
+                print "        \'{0:s}\'".format( values )
+            elif type == 'array':
+                for v in values:
+                    print "        \'{0:s}\'".format( v )
+            elif type == 'hash':
+                keys = list( values )
+                for key in keys:
+                    value = values[ key ]
+                    print "        {0:s} = \'{1:s}\'".format( key, value )
+            else:
+                print "        ", values        # cant happen
+        print ""
