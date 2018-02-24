@@ -34,13 +34,19 @@
 
 3.0     Feb 12, 2018
         - can now accept comments with initial whitespace and not just
-          begining of the line
+          beginning of the line
         - better error checking for hash values - that they really are
           "keyword = value" pairs
         - values in hashes can now have '=' signs in them
         - code refactoring.  simplifying, removing crap
-        - the 'main' tets program in module much smarter and has real
-          options checking (and --help|-h option
+        - the 'main' test program in module much smarter and has real
+          options checking (and --help|-h option)
         - added more entries to configs/test-defs.conf so that 
-          AcceptUndefinedKeywords does not need t obe setting for testing
+          AcceptUndefinedKeywords does not need to be setting for testing
           of main program in module without the --accept option
+
+3.1     Feb 23, 2018
+        - typos fixed in RELEASE-NOTES
+        - added files to create a proper Python distribution
+          (setup.py, MANIFEST.in, README.txt, INSTALL, ...)
+        - Makefile updated to favor setup.py installation
