@@ -3,3 +3,4 @@ MANIFEST.in
 MANIFEST
 setup.py
 README.txt
+build
