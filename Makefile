@@ -20,3 +20,8 @@ htmldoc:
 	pydoc -w config
 	mv config.html doc
 
+sdist:
+	python setup.py sdist
+
+clean:
+	rm config.pyc

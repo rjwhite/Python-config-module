@@ -3,19 +3,19 @@
 import config
 import sys
 
-config_file  = 'configs/test.conf'
-defs_file    = 'configs/test-defs.conf'
-config_file2 = 'configs/test2.conf'
+config_file  = 'configs/config.conf'
+defs_file    = 'configs/config-defs.conf'
 
-def expecting( num, description, got, expect):
+def expecting( test_num, description, got, expect ):
     ret = 1
     result = 'NOT ok'       # default to fail
     if got == expect:
         result = 'OK'
         ret = 0
 
-    print "test #{0}: ({1}): {2}. Expected \'{3}\', Got \'{4}\'". \
-        format( num, description, result, expect, got )
+    print( "test #{0:d}: ({1}): {2}.\n".format( test_num, description, result ) + \
+        "\tExpected: \'{0}\'\n".format( expect ) + \
+        "\tGot: \'{0}\'".format( got ))
 
     return( ret )
 
@@ -24,14 +24,9 @@ def expecting( num, description, got, expect):
 config.Config.set_debug( False )
 
 num_errs = 0 
+test_num = 1
 try:
     conf = config.Config( config_file, defs_file, AcceptUndefinedKeywords=True )
-except ( IOError, SyntaxError, ValueError ) as err:
-    sys.stderr.write( '%s\n' % str(err))
-    sys.exit(1)
-
-try:
-    conf2 = config.Config( config_file2, defs_file, AcceptUndefinedKeywords=True )
 except ( IOError, SyntaxError, ValueError ) as err:
     sys.stderr.write( '%s\n' % str(err))
     sys.exit(1)
@@ -40,86 +35,62 @@ try:
     sections = conf.get_sections()
 except ( ValueError ) as err:
     sections = ()
-num_errs += expecting( 1, 'num of sections for ' + config_file, len(sections), 8 )
+num_errs += expecting( test_num, 'num of sections for ' + config_file, len(sections), 7 )
+test_num += 1
 
 try:
     keywords = conf.get_keywords( 'section1' )
 except ( IOError, SyntaxError, ValueError ) as err:
     keywords = ()
-num_errs += expecting( 2, 'num of keywords in section=section1', len(keywords), 3 )
+num_errs += expecting( test_num, 'num of keywords in section \'section1\'', len(keywords), 8 )
+test_num += 1
 
 try:
-    value = conf.get_values( 'section2', 'things' )
+    expect = '  another scalar with leading and trailing spaces  '
+    value = conf.get_values( 'section1', 'keyword1.2' )
 except ( IOError, SyntaxError, ValueError ) as err:
     value = ""
-num_errs += expecting( 3, 'scalar value for section2:things', value, 'this and that   ' )
+num_errs += expecting( test_num, 'scalar value for section1:keyword1.2', value, expect )
+test_num += 1
 
-an_array = [ 'blue', 'yellow', 'red', 'orange', 'purple' ]
+
+an_array = [ 'one', 'two', 'three', 'four' ]
 try:
-    values = conf.get_values( 'some-arrays', 'some-colours' )
+    values = conf.get_values( 'section1', 'keyword1.4' )
 except ( IOError, SyntaxError, ValueError ) as err:
     values = ()
-num_errs += expecting( 4, 'arrays values for some-arrays:some-colours', str(values), str(an_array) )
-
-try:
-    values = conf.get_values( 'some-hashes', 'colours' )
-    value = values[ 'critical' ]
-except ( IOError, SyntaxError, ValueError ) as err:
-    pass
-num_errs += expecting( 5, 'hash value for some-hashes:colours[critical]', value, 'red' )
-
-try:
-    type = conf.get_type( 'some-arrays', 'some-colours' )
-except ( IOError, SyntaxError, ValueError ) as err:
-    pass
-num_errs += expecting( 6, 'get type (array) for some-arrays:some-colours', type, 'array' )
-
-try:
-    type = conf.get_type( 'colours' )
-except ( IOError, SyntaxError, ValueError ) as err:
-    pass
-num_errs += expecting( 7, 'get type (hash) for keyword=colours', type, 'hash' )
+num_errs += expecting( test_num, 'arrays values for section1:keyword1.4', str(values), str(an_array) )
+test_num += 1
 
 
 try:
-    type = conf2.get_type( 'bikes', 'yamaha' )
+    values = conf.get_values( 'section1', 'keyword1.5' )
+    value = values[ '2' ]
 except ( IOError, SyntaxError, ValueError ) as err:
     pass
-num_errs += expecting( 8, 'get type (array) for bikes:yamaha', type, 'array' )
+num_errs += expecting( test_num, 'hash value for section1:keyword1.5[critical]', value, 'two' )
+test_num += 1
+
 
 try:
-    type = conf2.get_type( 'bikes', 'honda')
+    type = conf.get_type( 'section1', 'keyword1.8' )
 except ( IOError, SyntaxError, ValueError ) as err:
     pass
-num_errs += expecting( 9, 'get type (scalar) for bikes:honda', type, 'scalar' )
+num_errs += expecting( test_num, 'get type (array) for section1:keyword1.8', type, 'array' )
+test_num += 1
+
 
 try:
-    value = conf2.get_values( 'bikes', 'ducati' )
+    type = conf.get_type( 'keyword1.6' )
 except ( IOError, SyntaxError, ValueError ) as err:
     pass
-num_errs += expecting( 10, 'scalar value for bikes:ducati', value, '2001' )
+num_errs += expecting( test_num, 'get type (hash) for keyword=keyword1.6', type, 'hash' )
+test_num += 1
 
-try:
-    type = conf2.get_type( 'planets', 'big')
-except ( IOError, SyntaxError, ValueError ) as err:
-    pass
-num_errs += expecting( 11, 'get type (scalar) for planets:big', type, 'scalar' )
-
-try:
-    type = conf2.get_type( 'planets', 'small')
-except ( IOError, SyntaxError, ValueError ) as err:
-    pass
-num_errs += expecting( 12, 'get type (array) for planets:small', type, 'array' )
-
-try:
-    type = conf2.get_type( 'big')
-except ( IOError, SyntaxError, ValueError ) as err:
-    pass
-num_errs += expecting( 13, 'get type (scalar) for keyword big', type, 'scalar' )
 
 if num_errs:
-    print "\nFAILed tests with {0:d} errors".format( num_errs )
+    print( "\nFAILed tests with {0:d} errors".format( num_errs ))
     sys.exit(1)
 else:
-    print "\nALL tests PASSed"
+    print( "\nALL tests PASSed" )
     sys.exit(0)

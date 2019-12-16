@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup( 
     name                = "config",
-    version             = "3.1",
+    version             = "3.2",
     py_modules          = [ 'config' ],
     author              = "RJ White",
     author_email        = "rj@moxad.com",

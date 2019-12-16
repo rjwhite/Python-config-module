@@ -1,2 +1,4 @@
 config.pyc
 build
+README.dist
+__pycache__

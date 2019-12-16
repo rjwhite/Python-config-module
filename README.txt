@@ -92,43 +92,43 @@ Code example:
 -------------
 
     #!/usr/bin/env python
-
+    
     import config
     import sys
-
+    
     try:
-        conf = config.Config( 'test.conf', 'test-defs.conf', AcceptUndefinedKeywords=1)
+        conf = config.Config( 'configs/config.conf', 'configs/config-defs.conf', AcceptUndefinedKeywords=1)
     except ( IOError, SyntaxError, ValueError ) as err:
         sys.stderr.write( '%s\n' % str(err))
         sys.exit(1)
-
+    
     sections = conf.get_sections()
     for section in sections:
-        print section + ':'
+        print( section + ':' )
         keywords = conf.get_keywords( section )
         for keyword in keywords:
-            print "\t" + keyword + ':'
-
+            print( "\t" + keyword + ':' )
+    
             try:
                 type = conf.get_type( section, keyword )
             except ( ValueError ) as err:
                 sys.stderr.write( '%s\n' % str(err))
                 sys.exit(1)
-
+    
             try:
                 values = conf.get_values( section, keyword )
             except ( ValueError ) as err:
                 sys.stderr.write( '%s\n' % str(err))
                 sys.exit(1)
-
+    
             if type == 'scalar':
-                print '\t\t\'' + values + "'"
+                print( '\t\t\'' + values + "'" )
             elif type == 'array':
                 for v in values:
-                    print "\t\t\'" + v + "\'"
+                    print( "\t\t\'" + v + "\'" )
             elif type == 'hash':
                 keys = list( values )
                 for key in keys:
-                    print '\t\t' + key + ' = ' + "\'" + values[ key ] + "\'"
+                    print( '\t\t' + key + ' = ' + "\'" + values[ key ] + "\'" )
             else:
-                print '\t\tunknown type: ' + type
+                print( '\t\tunknown type: ' + type )

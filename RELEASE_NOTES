@@ -50,3 +50,27 @@
         - added files to create a proper Python distribution
           (setup.py, MANIFEST.in, README.txt, INSTALL, ...)
         - Makefile updated to favor setup.py installation
+
+3.2     Dec 15, 2019
+        - moved setting of debug value to before loading of config if
+          module run as test program so we can find problems easier
+        - now supports Python 3.  Backwards compatible
+        - check that a valid section name is in effect when it comes across
+          a keyword
+        - removed data dump of config file in debug mode in config.py
+          since you get this anyway by running the module as a program
+          (__main__)
+        - initialization routine prints out which major version of
+          Python is running when in debug mode
+        - changed the names of the test config and defs file the module
+          uses when run as a program (__main__)
+        - sample-program.py updated to be Python 3 compliant
+        - test.py removed.  sample-program.py is a better version of it
+        - added 'clean' and 'sdist' target to Makefile
+        - added '__pycache__' and 'README.dist' to .gitignore
+        - completely overhauled the test configs in subdir ./configs
+          old ones removed.
+        - run-tests.py overhauled to handle new test configs and also
+          be Python 3 compliant
+        - updated code example in README.txt and README.md to be python3
+          compliant

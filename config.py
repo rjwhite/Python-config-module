@@ -17,6 +17,15 @@
 import re
 import sys
 
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
+
+string_type = str
+if PY2:
+    string_type = basestring
+if PY3:
+    string_type = str
+
 class Config(object):
     """
     Read a config file.
@@ -142,6 +151,9 @@ class Config(object):
         self.sections           = {}
         self.sections_ordered   = []
         self.keywords_ordered   = {}
+
+        Config.__debug( self, __name__, i_am, 'running Python version {0}'. \
+            format( sys.version_info[0] ))
 
         Config.__debug( self, __name__, i_am, 'processing config file ' + config_file )
         Config.__debug( self, __name__, i_am, 'processing definitions file ' + defs_file )
@@ -390,13 +402,17 @@ class Config(object):
                 raise SyntaxError( error_msg )
 
         except IOError as e:
-            Config.__debug( self, __name__, i_am, 'could not open ' + defs_file )
+            if defs_file != "":
+                filename = "'" + defs_file + "'"
+            else:
+                filename = 'a definitions file'
+            Config.__debug( self, __name__, i_am, 'could not open ' + filename )
             raise       # we ultimately ignore this further up the stack
 
         # print out our data structures if G_debug is set
 
         if Config._DEBUG:
-            print '\ndata dump of definitions file ' + defs_file + ':'
+            print( '\ndata dump of definitions file ' + defs_file + ':' )
             for key in self.defs:
                 type    = Config._DEFAULT_TYPE
                 sep     = Config._DEFAULT_SEPARATOR
@@ -412,18 +428,18 @@ class Config(object):
                     sep = self.defs[key][Config._DEFS_SEPARATOR]
 
                 if section != "":
-                    print '\t' + section + ':' + keyword + ':'
+                    print( '\t' + section + ':' + keyword + ':' )
                 else:
-                    print '\t' + keyword + ':'
+                    print( '\t' + keyword + ':' )
 
-                print "\t\ttype: \'" + type + "\'"
-                print "\t\tseparator: \'" + sep + "\'"
+                print( "\t\ttype: \'" + type + "\'" )
+                print( "\t\tseparator: \'" + sep + "\'" )
 
                 if Config._DEFS_ALLOWED in self.defs[ key ]:
-                    print "\t\tallowed values:"
+                    print( "\t\tallowed values:" )
                     for v in self.defs[ key ][ Config._DEFS_ALLOWED ]:
-                        print "\t\t\t\'" + v + "\'"
-            print "\n"
+                        print( "\t\t\t\'" + v + "\'" )
+            print( "\n" )
 
 
     def __read_file( self, cnf_file ):
@@ -524,6 +540,14 @@ class Config(object):
 
                 if m or m2:
                     # ok, it's a 'keyword = value(s)' line
+
+                    # make sure we have a valid section
+
+                    if self.section_name == "":
+                        err = "found keyword not within a section, on line #{0:d} in {1}". \
+                            format( line_number, config_file )
+                        raise ValueError( "{0}: {1}".format( i_am, err ))
+
                     self.state = Config._STATE_KEYWORDS
 
                     most_sig_type = None    # most significant 'type'
@@ -732,18 +756,6 @@ class Config(object):
                 self.error_msg = self.error_msg.strip()
                 raise ValueError(self.error_msg )
 
-            # debugging info when we are all done the top (recursive) level
-            if ( Config._DEBUG ) and ( depth == 1 ):
-                print '\ndata dump from config file ' + cnf_file + ':'
-                for s in  self.sections:
-                    print "\t" + s
-                    for k in self.sections[ s ]:
-                        print "\t\t", k, '=',
-                        obj = self.sections[ s ]
-                        v = obj[k]
-                        print "\'" + str(v)  + "\'"
-                print '\n'
-
         except IOError:
             # we don't want to clobber our error message deep down in a
             # recursive Hell.  So save our error message and as we bubble
@@ -766,7 +778,7 @@ class Config(object):
 
     def __debug( self, module, func, str ):
         if Config._DEBUG:
-            print "debug: {0}: {1}(): {2}".format( module, func, str )
+            print( "debug: {0}: {1}(): {2}".format( module, func, str ))
 
 
     # to be backward compatible with the first version which only took
@@ -795,11 +807,11 @@ class Config(object):
             # ignore any excess arguments
             section = args[0]
             keyword = args[1]
-            if not isinstance( section, basestring):
+            if not isinstance( section, string_type ):
                 raise ValueError( i_am + ": section argument is not a string" )
         elif  num_args == 1:
             keyword = args[0]
-            if not isinstance( keyword, basestring):
+            if not isinstance( keyword, string_type ):
                 raise ValueError( i_am + ": keyword argument is not a string" )
         else:
             raise ValueError( i_am + ": missing argument(s)" )
@@ -853,7 +865,7 @@ class Config(object):
         i_am = sys._getframe().f_code.co_name
         keys = []
 
-        if not isinstance( section , basestring):
+        if not isinstance( section, string_type ):
             raise ValueError( i_am + ": section argument is not a string" )
 
         if section in self.sections:
@@ -876,12 +888,12 @@ class Config(object):
         eg:
             sections = conf.get_sections()
             for section in sections:
-                print section
+                print( section )
                 keywords = conf.get_keywords( section )
                 for keyword in keywords:
-                    print "\\t" + keyword
+                    print( "\\t" + keyword )
                     values = conf.get_values( section, keyword )
-                    print "\\t\\t", values
+                    print( "\\t\\t", values )
 
         The data-type of the return value depends on the 'type' of
         the data.  By default it is a scalar, so a string would be 
@@ -896,9 +908,9 @@ class Config(object):
 
         i_am = sys._getframe().f_code.co_name
 
-        if not isinstance( section , basestring):
+        if not isinstance( section, string_type ):
             raise ValueError( i_am + ": section argument is not a string" )
-        if not isinstance( keyword, basestring):
+        if not isinstance( keyword, string_type ):
             raise ValueError( i_am + ": keyword argument is not a string" )
 
         if section in self.sections:
@@ -929,10 +941,10 @@ class Config(object):
         if value == 0 or value == False:
             set_state = False
             if old_value == True:
-                print "debug: setting debug to OFF"
+                print( "debug: setting debug to OFF" )
         else:
             set_state = True
-            print "debug: setting debug to ON"
+            print( "debug: setting debug to ON" )
 
         Config._DEBUG = set_state
 
@@ -941,11 +953,14 @@ class Config(object):
             
 if __name__ == "__main__":
     # % python config.py [-d] [-a] [-h] [-c config] [-f defs-file]
+    # To use the default config file and defs file, you'll want to
+    # use the -a option (AcceptUndefinedKeywords = True) if you 
+    # want the undeclared keywords to pass
 
     import sys
 
-    config_file = 'configs/config1.conf'
-    config_defs = 'configs/test-defs.conf'
+    config_file = 'configs/config.conf'
+    config_defs = 'configs/config-defs.conf'
     debug       = False
     undef_keys  = False
 
@@ -962,18 +977,20 @@ if __name__ == "__main__":
         elif arg == '-a' or arg == '--accept':
             undef_keys = True
         elif arg == '-h' or arg == '--help':
-            print "python {0:s} [option]*".format( sys.argv[0] )
-            print "   [-a|--accept] (AcceptUndefinedKeywords)"
-            print "   [-c|--config] config-file (default={0:s})".format( config_file )
-            print "   [-f|--defs]   defs-file (default={0:s})".format( config_defs )
-            print "   [-d|--debug]  (debug)"
-            print "   [-h|--help]   (help)"
+            print( "python {0:s} [option]*".format( sys.argv[0] ))
+            print( "   [-a|--accept] (AcceptUndefinedKeywords)" )
+            print( "   [-c|--config] config-file (default={0:s})".format( config_file ))
+            print( "   [-f|--defs]   defs-file (default={0:s})".format( config_defs ))
+            print( "   [-d|--debug]  (debug)" )
+            print( "   [-h|--help]   (help)" )
             sys.exit(0)
         else:
-            print "unknown option: {0:s}".format( arg )
+            print( "unknown option: {0:s}".format( arg ))
             sys.exit(1)
 
         i = i+1
+
+    Config.set_debug( debug )
 
     try:
         conf = Config( config_file, config_defs, AcceptUndefinedKeywords=undef_keys)
@@ -981,33 +998,32 @@ if __name__ == "__main__":
         sys.stderr.write( '%s\n' % str(err))
         sys.exit(1)
 
-    Config.set_debug( debug )
-
-    print 'Using config file: ', config_file
+    print( 'Using config file: {0}'.format( config_file ))
     if config_defs != "":
-        print 'Using config definitions file: ', config_defs
+        print( 'Using config definitions file: {0}'.format( config_defs ))
     else:
-        print "Not using a definitions file"
+        print( "Not using a definitions file" )
 
-    print "Version = {0:s}\n".format( Config._VERSION )
+    print( "Config Version = {0:s}".format( Config._VERSION ))
+    print( "Using Python version {0}\n".format( sys.version_info[0] ))
     sections = conf.get_sections()
     for section in sections:
-        print section + ':'
+        print( section + ':' )
         keywords = conf.get_keywords( section )
         for keyword in keywords:
             type = conf.get_type( section, keyword )
-            print "   {0:s}  ({1:s}):".format( keyword, type )
+            print( "\t{0:s}  ({1:s}):".format( keyword, type ))
             values = conf.get_values( section, keyword )
             if type == 'scalar':
-                print "        \'{0:s}\'".format( values )
+                print( "\t\t\'{0:s}\'".format( values ))
             elif type == 'array':
                 for v in values:
-                    print "        \'{0:s}\'".format( v )
+                    print( "\t\t\'{0:s}\'".format( v ))
             elif type == 'hash':
                 keys = list( values )
                 for key in keys:
                     value = values[ key ]
-                    print "        {0:s} = \'{1:s}\'".format( key, value )
+                    print( "\t\t{0:s} = \'{1:s}\'".format( key, value ))
             else:
-                print "        ", values        # cant happen
-        print ""
+                print( "\t\t" + values )        # cant happen
+        print( "" )
