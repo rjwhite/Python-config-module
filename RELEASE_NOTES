@@ -74,3 +74,7 @@
           be Python 3 compliant
         - updated code example in README.txt and README.md to be python3
           compliant
+
+3.2.1   Jan 3, 2020
+        - updated VERSION to reflect these RELEASE-NOTES
+        - added -f to rm in 'make clean'

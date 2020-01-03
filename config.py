@@ -114,7 +114,7 @@ class Config(object):
     _HIDE_SEPARATOR     = 'EvIlCoMmA'
     _HIDE_BACKSLASH     = 'EvIlBaCkSlAsH'
 
-    _VERSION            = '3.0'
+    _VERSION            = '3.2.1'
 
     _DEBUG              = 0     # use set_debug() to set
 

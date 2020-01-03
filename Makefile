@@ -24,4 +24,4 @@ sdist:
 	python setup.py sdist
 
 clean:
-	rm config.pyc
+	rm -f config.pyc
