@@ -78,3 +78,6 @@
 3.2.1   Jan 3, 2020
         - updated VERSION to reflect these RELEASE-NOTES
         - added -f to rm in 'make clean'
+
+3.2.2   July 15, 2020
+        - fixed error message in get_keywords()

@@ -114,7 +114,7 @@ class Config(object):
     _HIDE_SEPARATOR     = 'EvIlCoMmA'
     _HIDE_BACKSLASH     = 'EvIlBaCkSlAsH'
 
-    _VERSION            = '3.2.1'
+    _VERSION            = '3.2.2'
 
     _DEBUG              = 0     # use set_debug() to set
 
@@ -872,7 +872,7 @@ class Config(object):
             for k in self.keywords_ordered[ section ]:
                 keys.append( k )
         else:
-            error = "could not any keywords for section \'{0}\'". \
+            error = "could not find any keywords for section \'{0}\'". \
                 format( section )
             Config.__debug( self, __name__, i_am, error )
             raise ValueError( i_am + ": " + error )
