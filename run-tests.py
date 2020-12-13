@@ -68,7 +68,7 @@ try:
     value = values[ '2' ]
 except ( IOError, SyntaxError, ValueError ) as err:
     pass
-num_errs += expecting( test_num, 'hash value for section1:keyword1.5[critical]', value, 'two' )
+num_errs += expecting( test_num, 'hash value for section1:keyword1.5[\'2\']', value, 'two' )
 test_num += 1
 
 

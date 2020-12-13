@@ -81,3 +81,10 @@
 
 3.2.2   July 15, 2020
         - fixed error message in get_keywords()
+
+3.2.3   Dec 13, 2020
+        - fixed 2 calls to close() - was missing brackets
+        - removed unnecessary start of line anchor for re.match
+        - fixed statement printed in run-tests.py that was misleading
+        - refactored some debug statements and empty/indented line checks
+

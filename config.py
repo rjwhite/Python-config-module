@@ -114,7 +114,7 @@ class Config(object):
     _HIDE_SEPARATOR     = 'EvIlCoMmA'
     _HIDE_BACKSLASH     = 'EvIlBaCkSlAsH'
 
-    _VERSION            = '3.2.2'
+    _VERSION            = '3.2.3'
 
     _DEBUG              = 0     # use set_debug() to set
 
@@ -155,8 +155,10 @@ class Config(object):
         Config.__debug( self, __name__, i_am, 'running Python version {0}'. \
             format( sys.version_info[0] ))
 
-        Config.__debug( self, __name__, i_am, 'processing config file ' + config_file )
-        Config.__debug( self, __name__, i_am, 'processing definitions file ' + defs_file )
+        Config.__debug( self, __name__, i_am, 'processing config file ' +
+            config_file )
+        Config.__debug( self, __name__, i_am, 'processing definitions file ' +
+            defs_file )
 
         # read in a definitions file.
         # It is optional so it is ok if it does not exist
@@ -239,7 +241,8 @@ class Config(object):
         line_number  = 0 
         continuation = 0     # flag for continuation line
 
-        Config.__debug( self, __name__, i_am, 'processing definitions file ' + defs_file )
+        Config.__debug( self, __name__, i_am, 'processing definitions file ' +
+            defs_file )
 
         try:
             f = open( defs_file, "r" )
@@ -247,18 +250,15 @@ class Config(object):
                 line_number += 1
 
                 line2 = line.rstrip('\r\n\t ')
-                if line2.startswith( "#" ): continue    # comments
-                m = re.match( "^\s*\#", line2 )
-                if m:
-                    continue                            # indented comment 
+                if line2.startswith( "#" ):    continue     # comments
+                if re.match( "\s*\#", line2 ): continue     # indented comment 
 
                 # See if this is a continuation from a previous line
                 if continuation == 1:
                     line2 = last_str + line2.lstrip()
 
                 #  have to double-escape to get a single backslash!?  blech!
-                m = re.match( '^.*[^\\\\]\\\\$', line2 )
-                if m:
+                if re.match( '.*[^\\\\]\\\\$', line2 ):
                     continuation = 1
                     dbg = 'got a continuation line on line #{0:d} in {1}'. \
                         format( line_number, defs_file )
@@ -284,7 +284,7 @@ class Config(object):
                             error = "Have not provided a keyword definition " + \
                                     "by end of block on line #{0:d} in {1}". \
                                 format( line_number, defs_file )
-                            error_msg += error + '\n'      # add to other errors
+                            error_msg += error + '\n'   # add to other errors
                             num_errs += 1
 
                     keyword   = ""          # reset
@@ -296,7 +296,7 @@ class Config(object):
                     continue                # blank line
 
                 # keyword = something
-                m = re.match( "^([\w\-]+)\s*=\s*(.*)\s*$", line2 )
+                m = re.match( "([\w\-]+)\s*=\s*(.*)\s*$", line2 )
                 if m:
                     key   = m.group(1)
                     value = m.group(2)
@@ -312,7 +312,7 @@ class Config(object):
                     section = ""        # default
                     full_keyword = keyword
                     # match section:keyword
-                    m = re.match( "^([\w\-]+):([\w\-]+)$", value )
+                    m = re.match( "([\w\-]+):([\w\-]+)$", value )
                     if m:
                         section = m.group(1)
                         keyword = m.group(2)
@@ -336,10 +336,10 @@ class Config(object):
                     obj[ Config._DEFS_TYPE ] = value
                 elif key == Config._DEFS_SEPARATOR:
                     # get rid of surrounding matching quotes
-                    m = re.match( "^\'(.*)\'$", value )
+                    m = re.match( "\'(.*)\'$", value )
                     if m: value = m.group(1)
 
-                    m = re.match( "^\"(.*)\"$", value )
+                    m = re.match( "\"(.*)\"$", value )
                     if m: value = m.group(1)
 
                     got_data  = 1
@@ -358,9 +358,9 @@ class Config(object):
                     for v in values:
                         v = v.strip()       # leading  and trailing whitespace
                         # get rid of surrounding matching quotes
-                        m = re.match( "^\'(.*)\'$", v )
+                        m = re.match( "\'(.*)\'$", v )
                         if m: v = m.group(1)
-                        m = re.match( "^\"(.*)\"$", v )
+                        m = re.match( "\"(.*)\"$", v )
                         if m: v = m.group(1)
 
                         # put any separators back but without the backslash
@@ -377,7 +377,7 @@ class Config(object):
                     num_errs += 1
                     continue
 
-            f.close
+            f.close()
 
             # finish up outstanding entry if it exists
             if got_data:
@@ -479,7 +479,8 @@ class Config(object):
         line_number = 0 
 
         debug_str = "(depth=" + str(depth) + ")"
-        Config.__debug( self, __name__, i_am, debug_str + ' processing config file ' + cnf_file )
+        Config.__debug( self, __name__, i_am, debug_str + 
+                        ' processing config file ' + cnf_file )
 
         try:
             f = open( cnf_file, "r" )
@@ -495,18 +496,15 @@ class Config(object):
                     Config.__read_file( self, include_file )
                     continue
 
-                if str1.startswith( "#" ): continue     # comment
-                m = re.match( "^\s*\#", str1 )
-                if m:
-                    continue                            # indented comment 
-                if str1 == "": continue                 # blank line
+                if str1.startswith( "#" ):    continue     # comment
+                if re.match( "\s*\#", str1 ): continue     # indented comment 
+                if str1 == "": continue                    # blank line
 
                 # See if this is a continuation from a previous line
                 if continuation == 1:
                     str1 = last_str + str1.lstrip()
 
-                m = re.match( '^.*[^\\\\]\\\\$', str1 )
-                if m:
+                if re.match( '.*[^\\\\]\\\\$', str1 ):
                     continuation = 1
                     dbg = 'got a continuation line on line #{0:d} in {1}'. \
                         format( line_number, cnf_file )
@@ -519,7 +517,7 @@ class Config(object):
 
 
                 # start of a new section
-                m = re.match( "^([\w\-]+)[:]*\s*", str1 )
+                m = re.match( "([\w\-]+)[:]*\s*", str1 )
                 if m:
                     self.state = Config._STATE_SECTION
                     self.section_name = m.group(1)
@@ -535,8 +533,8 @@ class Config(object):
                 # test if inside a section
                 # m:    "    this = that"
                 # m2:   "    this (type) = that"
-                m  = re.match( "^\s+([\w\.\-]+)\s*=\s*(.*)\s*$", str1 )
-                m2 = re.match( "^\s+([\w\.\-]+)\s+\(([\w]+)\)\s*=\s*(.*)\s*$", str1 )
+                m  = re.match( "\s+([\w\.\-]+)\s*=\s*(.*)\s*$", str1 )
+                m2 = re.match( "\s+([\w\.\-]+)\s+\(([\w]+)\)\s*=\s*(.*)\s*$", str1 )
 
                 if m or m2:
                     # ok, it's a 'keyword = value(s)' line
@@ -645,9 +643,9 @@ class Config(object):
                     obj = value         # default (scalar)
                     if type == Config._TYPE_SCALAR:
                         # get rid of surrounding matching quotes
-                        m = re.match( "^\'(.*)\'$", value )
+                        m = re.match( "\'(.*)\'$", value )
                         if m: value = m.group(1)
-                        m = re.match( "^\"(.*)\"$", value )
+                        m = re.match( "\"(.*)\"$", value )
                         if m: value = m.group(1)
 
                         # put any separators back but without the backslash
@@ -671,9 +669,9 @@ class Config(object):
                         for val in values:
                             val = val.strip()
                             # get rid of surrounding matching quotes
-                            m = re.match( "^\'(.*)\'$", val )
+                            m = re.match( "\'(.*)\'$", val )
                             if m: val = m.group(1)
-                            m = re.match( "^\"(.*)\"$", val )
+                            m = re.match( "\"(.*)\"$", val )
                             if m: val = m.group(1)
 
                             # put any separators back but without the backslash
@@ -695,7 +693,7 @@ class Config(object):
                         values = value.split( separator )
                         obj = {}
                         for val in values:
-                            m  = re.match( "^\s*([\w\.\-]+)\s*=\s*(.*)\s*$", val )
+                            m  = re.match( "\s*([\w\.\-]+)\s*=\s*(.*)\s*$", val )
                             if not m: 
                                 error = "did not find a KEYWORD = VALUE in hash on line #{0:d} in {1}: \'{2}\'". \
                                     format( line_number, cnf_file, val )
@@ -710,9 +708,9 @@ class Config(object):
                                 v = v.strip()
 
                                 # get rid of surrounding matching quotes
-                                m = re.match( "^\'(.*)\'$", v )
+                                m = re.match( "\'(.*)\'$", v )
                                 if m: v = m.group(1)
-                                m = re.match( "^\"(.*)\"$", v )
+                                m = re.match( "\"(.*)\"$", v )
                                 if m: v = m.group(1)
 
                                 # put any separators back but without the backslash
@@ -750,7 +748,7 @@ class Config(object):
                     self.num_errs += 1
                     continue
 
-            f.close
+            f.close()
 
             if (( depth == 1 ) and ( self.num_errs > 0 )):
                 self.error_msg = self.error_msg.strip()
