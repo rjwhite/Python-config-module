@@ -81,9 +81,9 @@ To see documentation, do a pydoc config
      separator              = ,
 
 ## Code example
-    #!/usr/bin/env python
+    #!/usr/bin/env python3
     
-    import config
+    from config_moxad import config
     import sys
     
     try:

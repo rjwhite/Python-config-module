@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import config
+from config_moxad import config
 import sys
 
 config.Config.set_debug( False )

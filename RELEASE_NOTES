@@ -88,3 +88,28 @@
         - fixed statement printed in run-tests.py that was misleading
         - refactored some debug statements and empty/indented line checks
 
+4.0     Oct 4, 2023
+        INSTALL location now changed !!
+        no longer installs into ${HOME}/lib/python
+        now installs into Python standard location of ${HOME}/.local/lib/...
+
+        - overhauled to better reflect the latest best practices in
+          building and distributing Python code.  Uses a pyproject.toml
+          file now instead of setup.py.  Module is now a (single module)
+          package called config_moxad to avoid conflicts with other config
+          packages/modules that users may be using or installed from PyPi.
+        - module config.py now moved to config_moxad/config.py
+        - the module still uses _VERSION, but also now uses __version__
+          to be more consistent with the normal convention
+        - The Makefile no longer allows installing as root
+        - no longer has a user install into ${HOME}/lib/python and instead
+          will (likely) end up in ${HOME}/.local/lib/python...  as per the
+          accepted default (unless you are using a virtual environment)
+        - the various test and sample programs have had their shebang
+          paths changed to python3 instead of just python, since newer
+          systems are doing away with 'python' (Like Linux Mint).
+        - So now, instead of programs importing this as:
+                import config
+          they should now be doing a:
+                from config_moxad import config
+          and then the rest of the code won't have to change

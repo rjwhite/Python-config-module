@@ -91,9 +91,9 @@ Definitions file example:
 Code example:
 -------------
 
-    #!/usr/bin/env python
+    #!/usr/bin/env python3
     
-    import config
+    from config_moxad import config
     import sys
     
     try:

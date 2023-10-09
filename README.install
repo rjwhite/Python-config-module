@@ -1,0 +1,39 @@
+Hopefully, all you need to do is:
+    make install
+and the module will (probably) end up in:
+    ~/.local/lib/python<version>/site-packages/config_moxad/config.py
+
+but if you run into errors, you may find that some bits of Python do
+not already exist on your Linux system, such as the pip, ensurepip, etc
+modules - which are needed to build or install this package.
+
+If you are on a Debian or any of it derivatives, such as Ubuntu or Linux
+Mint, you may need to do the following:
+
+    as the root super-user:
+        apt install python3.10-venv
+        apt install python3-pip
+
+    then as a normal user:
+        python3 -m pip install --user --upgrade pip
+        python3 -m pip install --user build
+
+
+If you find on a newly installed system that 'python' no longer exists
+and all your scripts break because they do something like:
+    #!/usr/bin/env python
+and you are expected to change 'python' to 'python3', you could instead
+run the following as root:
+        apt install python-is-python3
+and that will create a symlink named python pointing to python3
+
+Previous of version 4.0, this was a simple module called config.py installed
+into ~/lib/python/config.py.   However, in order to be consistent with modern
+Python best-practices, it will now install into ~/.local/lib/python..., unless
+you set up a virtual Python environment of your choosing.
+So as of version 4.0, instead of programs needing to add ~/lib/python to the
+sys.path search path and just doing a:
+    import config
+it should now be changed to:
+    from config_moxad import config
+and sys.path will no longer need changing in your programs.

@@ -26,6 +26,10 @@ if PY2:
 if PY3:
     string_type = str
 
+__version__ = '4.0'
+_VERSION = __version__      # for backwards compatibility < ver 4.0
+
+
 class Config(object):
     """
     Read a config file.
@@ -113,8 +117,6 @@ class Config(object):
     # wanted as part of the data
     _HIDE_SEPARATOR     = 'EvIlCoMmA'
     _HIDE_BACKSLASH     = 'EvIlBaCkSlAsH'
-
-    _VERSION            = '3.2.3'
 
     _DEBUG              = 0     # use set_debug() to set
 
