@@ -1,32 +1,43 @@
+"""
+human readable config files
+
+This module reads human-readable config files with sections comprised
+of keyword = values, where the values can be a simple scalar (by default)
+or arrays, or associative arrays (dicts).
+
+You can supply an optional definitions file providing value types, allowed
+values, different separators, etc.  It can recursively include other config
+files.
+"""
+
 # Copyright 2017 RJ White
+# 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-#
+# 
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-#
+# 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-# ---------------------------------------------------------------------
-#
 
 import re
 import sys
 
-PY2 = sys.version_info[0] == 2
-PY3 = sys.version_info[0] == 3
+_PY2 = sys.version_info[0] == 2
+_PY3 = sys.version_info[0] == 3
 
-string_type = str
-if PY2:
-    string_type = basestring
-if PY3:
-    string_type = str
+_string_type = str
+if _PY2:
+    _string_type = basestring
+if _PY3:
+    _string_type = str
 
-__version__ = '4.0'
+__version__ = '4.0.1'
 _VERSION = __version__      # for backwards compatibility < ver 4.0
 
 
@@ -154,9 +165,10 @@ class Config(object):
         self.sections_ordered   = []
         self.keywords_ordered   = {}
 
+        Config.__debug( self, __name__, i_am, 'config module version {0}'. \
+            format( __version__ ))
         Config.__debug( self, __name__, i_am, 'running Python version {0}'. \
             format( sys.version_info[0] ))
-
         Config.__debug( self, __name__, i_am, 'processing config file ' +
             config_file )
         Config.__debug( self, __name__, i_am, 'processing definitions file ' +
@@ -807,11 +819,11 @@ class Config(object):
             # ignore any excess arguments
             section = args[0]
             keyword = args[1]
-            if not isinstance( section, string_type ):
+            if not isinstance( section, _string_type ):
                 raise ValueError( i_am + ": section argument is not a string" )
         elif  num_args == 1:
             keyword = args[0]
-            if not isinstance( keyword, string_type ):
+            if not isinstance( keyword, _string_type ):
                 raise ValueError( i_am + ": keyword argument is not a string" )
         else:
             raise ValueError( i_am + ": missing argument(s)" )
@@ -865,7 +877,7 @@ class Config(object):
         i_am = sys._getframe().f_code.co_name
         keys = []
 
-        if not isinstance( section, string_type ):
+        if not isinstance( section, _string_type ):
             raise ValueError( i_am + ": section argument is not a string" )
 
         if section in self.sections:
@@ -908,9 +920,9 @@ class Config(object):
 
         i_am = sys._getframe().f_code.co_name
 
-        if not isinstance( section, string_type ):
+        if not isinstance( section, _string_type ):
             raise ValueError( i_am + ": section argument is not a string" )
-        if not isinstance( keyword, string_type ):
+        if not isinstance( keyword, _string_type ):
             raise ValueError( i_am + ": keyword argument is not a string" )
 
         if section in self.sections:

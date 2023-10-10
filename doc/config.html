@@ -1,30 +1,23 @@
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
 <html><head><title>Python: module config</title>
-<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 </head><body bgcolor="#f0f0f8">
 
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
 <tr bgcolor="#7799ee">
 <td valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>config</strong></big></big></font></td
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>config</strong></big></big> (version 4.0.1)</font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/raid1/home/rj/src/github/Python-config-module/config.py">/raid1/home/rj/src/github/Python-config-module/config.py</a></font></td></tr></table>
-    <p><tt>#&nbsp;Copyright&nbsp;2017&nbsp;RJ&nbsp;White<br>
-#&nbsp;This&nbsp;program&nbsp;is&nbsp;free&nbsp;software:&nbsp;you&nbsp;can&nbsp;redistribute&nbsp;it&nbsp;and/or&nbsp;modify<br>
-#&nbsp;it&nbsp;under&nbsp;the&nbsp;terms&nbsp;of&nbsp;the&nbsp;GNU&nbsp;General&nbsp;Public&nbsp;License&nbsp;as&nbsp;published&nbsp;by<br>
-#&nbsp;the&nbsp;Free&nbsp;Software&nbsp;Foundation,&nbsp;either&nbsp;version&nbsp;3&nbsp;of&nbsp;the&nbsp;License,&nbsp;or<br>
-#&nbsp;(at&nbsp;your&nbsp;option)&nbsp;any&nbsp;later&nbsp;version.<br>
-#<br>
-#&nbsp;This&nbsp;program&nbsp;is&nbsp;distributed&nbsp;in&nbsp;the&nbsp;hope&nbsp;that&nbsp;it&nbsp;will&nbsp;be&nbsp;useful,<br>
-#&nbsp;but&nbsp;WITHOUT&nbsp;ANY&nbsp;WARRANTY;&nbsp;without&nbsp;even&nbsp;the&nbsp;implied&nbsp;warranty&nbsp;of<br>
-#&nbsp;MERCHANTABILITY&nbsp;or&nbsp;FITNESS&nbsp;FOR&nbsp;A&nbsp;PARTICULAR&nbsp;PURPOSE.&nbsp;&nbsp;See&nbsp;the<br>
-#&nbsp;GNU&nbsp;General&nbsp;Public&nbsp;License&nbsp;for&nbsp;more&nbsp;details.<br>
-#<br>
-#&nbsp;You&nbsp;should&nbsp;have&nbsp;received&nbsp;a&nbsp;copy&nbsp;of&nbsp;the&nbsp;GNU&nbsp;General&nbsp;Public&nbsp;License<br>
-#&nbsp;along&nbsp;with&nbsp;this&nbsp;program.&nbsp;&nbsp;If&nbsp;not,&nbsp;see&nbsp;&lt;<a href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.<br>
-#&nbsp;---------------------------------------------------------------------<br>
-#</tt></p>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/raid1/home/rj/src/github/Python-config-module/config_moxad/config.py">/raid1/home/rj/src/github/Python-config-module/config_moxad/config.py</a></font></td></tr></table>
+    <p><tt>human&nbsp;readable&nbsp;config&nbsp;files<br>
+&nbsp;<br>
+This&nbsp;module&nbsp;reads&nbsp;human-readable&nbsp;config&nbsp;files&nbsp;with&nbsp;sections&nbsp;comprised<br>
+of&nbsp;keyword&nbsp;=&nbsp;values,&nbsp;where&nbsp;the&nbsp;values&nbsp;can&nbsp;be&nbsp;a&nbsp;simple&nbsp;scalar&nbsp;(by&nbsp;default)<br>
+or&nbsp;arrays,&nbsp;or&nbsp;associative&nbsp;arrays&nbsp;(dicts).<br>
+&nbsp;<br>
+You&nbsp;can&nbsp;supply&nbsp;an&nbsp;optional&nbsp;definitions&nbsp;file&nbsp;providing&nbsp;value&nbsp;types,&nbsp;allowed<br>
+values,&nbsp;different&nbsp;separators,&nbsp;etc.&nbsp;&nbsp;It&nbsp;can&nbsp;recursively&nbsp;include&nbsp;other&nbsp;config<br>
+files.</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -42,7 +35,7 @@
     
 <tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl>
-<dt><font face="helvetica, arial"><a href="__builtin__.html#object">__builtin__.object</a>
+<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
 </font></dt><dd>
 <dl>
 <dt><font face="helvetica, arial"><a href="config.html#Config">Config</a>
@@ -53,10 +46,12 @@
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
 <td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#000000" face="helvetica, arial"><a name="Config">class <strong>Config</strong></a>(<a href="__builtin__.html#object">__builtin__.object</a>)</font></td></tr>
+<font color="#000000" face="helvetica, arial"><a name="Config">class <strong>Config</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
-<td colspan=2><tt>Read&nbsp;a&nbsp;config&nbsp;file.<br>
+<td colspan=2><tt><a href="#Config">Config</a>(config_file,&nbsp;defs_file='',&nbsp;**options)<br>
+&nbsp;<br>
+Read&nbsp;a&nbsp;config&nbsp;file.<br>
 &nbsp;<br>
 The&nbsp;format&nbsp;of&nbsp;the&nbsp;config&nbsp;file&nbsp;will&nbsp;be:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;section1:<br>
@@ -116,7 +111,7 @@ trailing&nbsp;whitespace&nbsp;on&nbsp;a&nbsp;value.<br>
 To&nbsp;see&nbsp;debug&nbsp;output:&nbsp;&nbsp;config.<a href="#Config">Config</a>.<a href="#Config-set_debug">set_debug</a>(&nbsp;True&nbsp;)<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
-<dl><dt><a name="Config-__init__"><strong>__init__</strong></a>(self, config_file, defs_file<font color="#909090">=''</font>, **options)</dt><dd><tt>Initialization&nbsp;function.<br>
+<dl><dt><a name="Config-__init__"><strong>__init__</strong></a>(self, config_file, defs_file='', **options)</dt><dd><tt>Initialization&nbsp;function.<br>
 Not&nbsp;user&nbsp;callable.&nbsp;&nbsp;Ignore&nbsp;this.&nbsp;&nbsp;Go&nbsp;away.</tt></dd></dl>
 
 <dl><dt><a name="Config-get_keywords"><strong>get_keywords</strong></a>(self, section)</dt><dd><tt>Return&nbsp;a&nbsp;list&nbsp;of&nbsp;the&nbsp;keywords&nbsp;used&nbsp;in&nbsp;a&nbsp;section&nbsp;in&nbsp;a&nbsp;config&nbsp;file<br>
@@ -153,12 +148,12 @@ values&nbsp;=&nbsp;conf.<a href="#Config-get_values">get_values</a>(&nbsp;sectio
 eg:<br>
 &nbsp;&nbsp;&nbsp;&nbsp;sections&nbsp;=&nbsp;conf.<a href="#Config-get_sections">get_sections</a>()<br>
 &nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;section&nbsp;in&nbsp;sections:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;section<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(&nbsp;section&nbsp;)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;keywords&nbsp;=&nbsp;conf.<a href="#Config-get_keywords">get_keywords</a>(&nbsp;section&nbsp;)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;keyword&nbsp;in&nbsp;keywords:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;"\t"&nbsp;+&nbsp;keyword<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(&nbsp;"\t"&nbsp;+&nbsp;keyword&nbsp;)<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;values&nbsp;=&nbsp;conf.<a href="#Config-get_values">get_values</a>(&nbsp;section,&nbsp;keyword&nbsp;)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print&nbsp;"\t\t",&nbsp;values<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(&nbsp;"\t\t",&nbsp;values&nbsp;)<br>
 &nbsp;<br>
 The&nbsp;data-type&nbsp;of&nbsp;the&nbsp;return&nbsp;value&nbsp;depends&nbsp;on&nbsp;the&nbsp;'type'&nbsp;of<br>
 the&nbsp;data.&nbsp;&nbsp;By&nbsp;default&nbsp;it&nbsp;is&nbsp;a&nbsp;scalar,&nbsp;so&nbsp;a&nbsp;string&nbsp;would&nbsp;be&nbsp;<br>
@@ -172,7 +167,7 @@ it&nbsp;can&nbsp;find&nbsp;out&nbsp;with&nbsp;a&nbsp;call&nbsp;to&nbsp;<a href="
 
 <hr>
 Class methods defined here:<br>
-<dl><dt><a name="Config-set_debug"><strong>set_debug</strong></a>(cls, value)<font color="#909090"><font face="helvetica, arial"> from <a href="__builtin__.html#type">__builtin__.type</a></font></font></dt></dl>
+<dl><dt><a name="Config-set_debug"><strong>set_debug</strong></a>(value)<font color="#909090"><font face="helvetica, arial"> from <a href="builtins.html#type">builtins.type</a></font></font></dt></dl>
 
 <hr>
 Data descriptors defined here:<br>

@@ -6,7 +6,8 @@ import sys
 config.Config.set_debug( False )
 
 try:
-    conf = config.Config( 'configs/config.conf', 'configs/config-defs.conf', AcceptUndefinedKeywords=1)
+    conf = config.Config( 'configs/config.conf', 'configs/config-defs.conf',
+                           AcceptUndefinedKeywords=1)
 except ( IOError, SyntaxError, ValueError ) as err:
     sys.stderr.write( '%s\n' % str(err))
     sys.exit(1)

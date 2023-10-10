@@ -113,3 +113,21 @@
           they should now be doing a:
                 from config_moxad import config
           and then the rest of the code won't have to change
+
+4.0.1       Oct 9, 2023
+        config_moxad/config.py
+          - changed module variables PY2, PY3, and string_type to have a
+            leading underscore to make them internal semi-private variables
+          - changed comment style at beginning of module from '#' to
+            """ so it looks better with pydoc
+          - now prints out what version this module is in debug mode
+        README.md, README.txt, README.install
+          - minor grammar fixes
+        README.install:
+          - added some more detail: installing from PyPI
+        sample-program.py:
+          - wrapped a line that was too long for easy reading
+        doc/config.html:
+          - updated with 'make htmldoc'
+        Makefile:
+          - made default target (first entry) a new help entry

@@ -20,7 +20,7 @@ are ignored.
 To preserve whitespace around values, use matching single or double quotes
 around a value.
 
-A optional definitions file can be provided so that a different separator
+An optional definitions file can be provided so that a different separator
 than a comma can be given, restriction to a set of allowed values, and
 provide the type of value there instead of in the main config file.
 These can be specified for a specific keyword within a section, or
@@ -87,7 +87,8 @@ To see documentation, do a pydoc config
     import sys
     
     try:
-        conf = config.Config( 'configs/config.conf', 'configs/config-defs.conf', AcceptUndefinedKeywords=1)
+        conf = config.Config( 'configs/config.conf', 'configs/config-defs.conf',
+                               AcceptUndefinedKeywords=1)
     except ( IOError, SyntaxError, ValueError ) as err:
         sys.stderr.write( '%s\n' % str(err))
         sys.exit(1)
