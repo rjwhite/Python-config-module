@@ -27,6 +27,7 @@ files.
 
 import re
 import sys
+from . import __version__
 
 _PY2 = sys.version_info[0] == 2
 _PY3 = sys.version_info[0] == 3
@@ -37,7 +38,6 @@ if _PY2:
 if _PY3:
     _string_type = str
 
-__version__ = '4.0.1'
 _VERSION = __version__      # for backwards compatibility < ver 4.0
 
 

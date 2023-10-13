@@ -12,6 +12,8 @@ except ( IOError, SyntaxError, ValueError ) as err:
     sys.stderr.write( '%s\n' % str(err))
     sys.exit(1)
 
+print( "my version num = ", config.__version__ )
+
 sections = conf.get_sections()
 for section in sections:
     print( section + ':' )

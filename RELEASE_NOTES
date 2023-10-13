@@ -131,3 +131,10 @@
           - updated with 'make htmldoc'
         Makefile:
           - made default target (first entry) a new help entry
+
+4.0.2       Oct 13, 2023:
+        - changed the Intended Audience from "End Users/Desktop" to "Developers"
+          in the pyprojects.toml file
+        - moved the __version__ from the module to the __init__.py file so
+          you can see if from a import of the package as well.
+        - sample-program.py now prints out the version number
